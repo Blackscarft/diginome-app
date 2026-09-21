@@ -1,0 +1,62 @@
+name: Deploy Laravel to CWP 7
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: self-hosted  # Menggunakan Self-Hosted Runner di server CWP 7 Anda
+
+    steps:
+      # 1. Checkout Kode Terbaru dari Repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Sinkronkan File Proyek ke Folder Web CWP 7
+      - name: Sync Files to Web Directory
+        run: |
+          rsync -avz --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='storage/*.key' \
+            --exclude='storage/app/public/*' \
+            --exclude='public/storage' \
+            --exclude='.env' \
+            ./ /home/digimone/app.digimone.com/
+
+      # 3. Jalankan Optimasi & Migrasi Laravel di Server
+      - name: Optimize Laravel
+        run: |
+          cd /home/digimone/app.digimone.com/
+
+          # Install / update dependency Composer tanpa dev packages
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+          # Buat file .env jika belum ada
+          if [ ! -f .env ]; then
+              cp .env.example .env
+              php artisan key:generate
+          fi
+
+          # Buat symlink storage jika belum terhubung
+          php artisan storage:link || true
+
+          # Bersihkan cache lama lalu buat cache baru
+          php artisan optimize:clear
+          php artisan optimize
+          php artisan view:cache
+          php artisan event:cache
+
+          # Jalankan migrasi database
+          php artisan migrate --force
+
+      # 4. Perbaiki Hak Akses / Permission File CWP 7
+      - name: Fix Directory Permissions
+        run: |
+          cd /home/digimone/app.digimone.com/
+
+          # Setel hak akses folder storage & bootstrap/cache agar tidak Error 500
+          chmod -R 775 storage bootstrap/cache
