@@ -91,9 +91,16 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # Reset folder 755 & file 644
-          find . -type d -exec chmod 755 {} \;
-          find . -type f -exec chmod 644 {} \;
+          # 1. Samakan ownership ke user digimone (membutuhkan sudo)
+          sudo chown -R digimone:digimone . || true
           
-          # Set izin khusus penulisan untuk storage & cache
-          chmod -R 775 storage bootstrap/cache
+          # 2. Reset permission folder ke 755 & file ke 644
+          find . -type d -exec chmod 755 {} \; 2>/dev/null || true
+          find . -type f -exec chmod 644 {} \; 2>/dev/null || true
+          
+          # 3. Kembalikan permission execute untuk file artisan
+          chmod +x artisan || true
+          
+          # 4. Set izin khusus write untuk storage & bootstrap/cache menggunakan sudo
+          sudo chmod -R 775 storage bootstrap/cache || chmod -R 775 storage bootstrap/cache || true
+          sudo chmod -R ug+rwx storage bootstrap/cache || true
