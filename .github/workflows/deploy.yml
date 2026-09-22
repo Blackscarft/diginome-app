@@ -42,7 +42,7 @@ jobs:
 
           # Hapus file config/scribe.php lama dari server agar tidak memicu error class not found
           rm -f config/scribe.php
-          
+
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
@@ -61,14 +61,14 @@ jobs:
           # Buat symlink storage jika belum terhubung
           php artisan storage:link || true
 
+          # Jalankan migrasi database
+          php artisan migrate --force
+
           # Bersihkan cache lama lalu buat cache baru
           php artisan optimize:clear
           php artisan optimize
           php artisan view:cache
           php artisan event:cache
-
-          # Jalankan migrasi database
-          php artisan migrate --force
 
       # 5. Perbaiki Hak Akses / Permission File CWP 7
       - name: Fix Directory Permissions
