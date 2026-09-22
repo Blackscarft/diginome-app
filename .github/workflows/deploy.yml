@@ -40,11 +40,8 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           npm install --legacy-peer-deps
-
-          # Fix izin eksekusi untuk biner node_modules
           chmod -R +x node_modules/.bin/
-
-          npm run build
+          npx vite build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
       - name: Optimize Laravel & Generate Packages
@@ -101,7 +98,7 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Paksa ownership ke user digimone
+          # 1. Kembalikan ownership ke user digimone
           sudo chown -R digimone:digimone .
           
           # 2. Reset folder ke 755 & file ke 644 (Aturan suPHP CWP 7)
