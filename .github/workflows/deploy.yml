@@ -43,6 +43,9 @@ jobs:
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
+          #regenerate autoload files
+          composer dump-autoload -o --no-scripts
+
           # Buat file .env jika belum ada
           if [ ! -f .env ]; then
               cp .env.example .env
