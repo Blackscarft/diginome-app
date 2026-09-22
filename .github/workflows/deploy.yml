@@ -35,8 +35,8 @@ jobs:
           npm install --legacy-peer-deps
           npm run build
 
-      # 4. Jalankan Optimasi & Migrasi Laravel
-      - name: Optimize Laravel
+      # 4. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
+      - name: Optimize Laravel & Generate Packages
         run: |
           cd /home/digimone/app.digimone.com/
 
@@ -46,10 +46,10 @@ jobs:
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
-          #Otomatis publish ulang config Scribe v5 (meng-overwrite config/scribe.php bermasalah)
+          # Otomatis publish ulang config Scribe v5
           php artisan vendor:publish --tag=scribe-config --force || true
 
-          #regenerate autoload files
+          # Regenerate autoload files
           composer dump-autoload -o --no-scripts
 
           # Buat file .env jika belum ada
@@ -61,9 +61,20 @@ jobs:
           # Buat symlink storage jika belum terhubung
           php artisan storage:link || true
 
-          # Jalankan migrasi database
+          # Jalankan migrasi database & seeding
           php artisan migrate --force
           php artisan db:seed --force
+
+          # ----------------------------------------------------
+          # 🛡️ Filament Shield: Setup & Regenerate Permissions
+          # ----------------------------------------------------
+          php artisan shield:setup --no-interaction || true
+          php artisan shield:generate --all --panel=admin --no-interaction || true
+
+          # ----------------------------------------------------
+          # 📚 Scribe: Generate API Documentation
+          # ----------------------------------------------------
+          php artisan scribe:generate --no-interaction
 
           # Bersihkan cache lama lalu buat cache baru
           php artisan optimize:clear
@@ -71,9 +82,23 @@ jobs:
           php artisan view:cache
           php artisan event:cache
 
-      # 5. Perbaiki Hak Akses / Permission File CWP 7
+          # ----------------------------------------------------
+          # 🔄 Signal & Restart Queue Worker via Supervisor
+          # ----------------------------------------------------
+          php artisan queue:restart
+          sudo /usr/bin/supervisorctl restart digimone-worker:*
+
+      # 5. Perbaiki Hak Akses / Permission File CWP 7 (suPHP)
       - name: Fix Directory Permissions
         run: |
           cd /home/digimone/app.digimone.com/
-          # Setel hak akses folder storage & bootstrap/cache agar tidak Error 500
-          chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+          
+          # Set ownership ke user digimone
+          chown -R digimone:digimone .
+          
+          # Reset folder 755 & file 644 (termasuk public/docs hasil Scribe)
+          find . -type d -exec chmod 755 {} \;
+          find . -type f -exec chmod 644 {} \;
+          
+          # Set izin khusus penulisan hanya untuk storage & cache
+          chmod -R 775 storage bootstrap/cache
