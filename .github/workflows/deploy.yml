@@ -86,21 +86,23 @@ jobs:
           php artisan queue:restart
           sudo /usr/bin/supervisorctl restart digimone-worker:* || true
 
-      # 5. Perbaiki Hak Akses / Permission File CWP 7 (suPHP)
-      - name: Fix Directory Permissions
+      # 5. Perbaiki Hak Akses / Permission File CWP 7 (Aturan Ketat suPHP / CWP)
+      - name: Fix Directory Permissions for CWP 7
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Samakan ownership ke user digimone (membutuhkan sudo)
-          sudo chown -R digimone:digimone . || true
+          # 1. Paksa SEMUA file & folder menjadi milik user & group digimone
+          sudo chown -R digimone:digimone .
           
-          # 2. Reset permission folder ke 755 & file ke 644
-          find . -type d -exec chmod 755 {} \; 2>/dev/null || true
-          find . -type f -exec chmod 644 {} \; 2>/dev/null || true
+          # 2. Reset SEMUA folder ke 755 (CWP 7 MELARANG folder 775!)
+          find . -type d -exec chmod 755 {} \;
           
-          # 3. Kembalikan permission execute untuk file artisan
-          chmod +x artisan || true
+          # 3. Reset SEMUA file ke 644 (CWP 7 MELARANG file 775!)
+          find . -type f -exec chmod 644 {} \;
           
-          # 4. Set izin khusus write untuk storage & bootstrap/cache menggunakan sudo
-          sudo chmod -R 775 storage bootstrap/cache || chmod -R 775 storage bootstrap/cache || true
-          sudo chmod -R ug+rwx storage bootstrap/cache || true
+          # 4. Kembalikan permission execute khusus file artisan
+          chmod +x artisan
+          
+          # 5. Khusus folder storage & cache, tetapkan 755 (bukan 775)
+          # Karena owner sudah digimone, permission 755 sudah CUKUP agar PHP-FPM digimone bisa menulis.
+          chmod -R 755 storage bootstrap/cache
