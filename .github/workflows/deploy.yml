@@ -18,7 +18,7 @@ jobs:
       - name: Sync Files to Web Directory
         run: |
           rsync -rlptdz --delete \
-            --no-g --no-o \
+            --no-g --no-o --omit-dir-times\
             --exclude='.git' \
             --exclude='.github' \
             --exclude='node_modules' \
