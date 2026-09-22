@@ -41,14 +41,11 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
 
-          # Hapus file config/scribe.php lama dari server agar tidak memicu error class not found
-          rm -f config/scribe.php
+          # Clear cache terlebih dahulu agar perintah artisan berjalan bersih
+          php artisan optimize:clear
 
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
-
-          # Otomatis publish ulang config Scribe v5
-          php artisan vendor:publish --tag=scribe-config --force || true
 
           # Regenerate autoload files
           composer dump-autoload -o --no-scripts
@@ -73,12 +70,16 @@ jobs:
           php artisan shield:generate --all --panel=admin --no-interaction || true
 
           # ----------------------------------------------------
-          # 📚 Scribe: Generate API Documentation
+          # 📚 Scribe: Generate API Documentation (Aman Mode Prod)
           # ----------------------------------------------------
-          php artisan scribe:generate --no-interaction
+          if php artisan list | grep -q "scribe:generate"; then
+              php artisan vendor:publish --tag=scribe-config --force || true
+              php artisan scribe:generate --no-interaction
+          else
+              echo "⚠️ Scribe tidak terinstall di environment ini (skipped)."
+          fi
 
-          # Bersihkan cache lama lalu buat cache baru
-          php artisan optimize:clear
+          # Buat cache baru untuk environment produksi
           php artisan optimize
           php artisan view:cache
           php artisan event:cache
@@ -87,7 +88,7 @@ jobs:
           # 🔄 Signal & Restart Queue Worker via Supervisor
           # ----------------------------------------------------
           php artisan queue:restart
-          sudo /usr/bin/supervisorctl restart digimone-worker:*
+          sudo /usr/bin/supervisorctl restart digimone-worker:* || true
 
       # 5. Perbaiki Hak Akses / Permission File CWP 7 (suPHP)
       - name: Fix Directory Permissions
@@ -97,9 +98,9 @@ jobs:
           # Set ownership ke user digimone
           chown -R digimone:digimone .
           
-          # Reset folder 755 & file 644 (termasuk public/docs hasil Scribe)
+          # Reset folder 755 & file 644
           find . -type d -exec chmod 755 {} \;
           find . -type f -exec chmod 644 {} \;
           
-          # Set izin khusus penulisan hanya untuk storage & cache
+          # Set izin khusus penulisan untuk storage & cache
           chmod -R 775 storage bootstrap/cache
