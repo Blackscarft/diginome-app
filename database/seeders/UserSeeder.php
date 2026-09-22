@@ -19,6 +19,8 @@ class UserSeeder extends Seeder
             'password' => 'superrahasia'
         ]);
 
-        $superadmin->assignRole('super_admin');
+        if (method_exists($superadmin, 'assignRole')) {
+            $superadmin->assignRole('super_admin');
+        }
     }
 }
