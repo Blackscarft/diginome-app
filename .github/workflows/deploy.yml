@@ -63,6 +63,7 @@ jobs:
 
           # Jalankan migrasi database
           php artisan migrate --force
+          php artisan db:seed --force
 
           # Bersihkan cache lama lalu buat cache baru
           php artisan optimize:clear
