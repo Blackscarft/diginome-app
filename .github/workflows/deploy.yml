@@ -43,6 +43,9 @@ jobs:
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
+          #Otomatis publish ulang config Scribe v5 (meng-overwrite config/scribe.php bermasalah)
+          php artisan vendor:publish --tag=scribe-config --force || true
+
           #regenerate autoload files
           composer dump-autoload -o --no-scripts
 
