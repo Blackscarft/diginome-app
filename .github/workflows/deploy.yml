@@ -91,9 +91,6 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # Set ownership ke user digimone
-          chown -R digimone:digimone .
-          
           # Reset folder 755 & file 644
           find . -type d -exec chmod 755 {} \;
           find . -type f -exec chmod 644 {} \;
