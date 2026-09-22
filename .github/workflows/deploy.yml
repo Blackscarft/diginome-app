@@ -40,6 +40,9 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
 
+          # Hapus file config/scribe.php lama dari server agar tidak memicu error class not found
+          rm -f config/scribe.php
+          
           # Install / update dependency Composer tanpa dev packages
           composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
