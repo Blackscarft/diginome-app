@@ -46,7 +46,8 @@ jobs:
           # 3. Atur IZIN EKSEKUSI DI SINI (Setelah node_modules terbentuk)
           sudo chmod -R +x node_modules/.bin/ 2>/dev/null || true
 
-          npm run build
+          # 4. Jalankan Build Vite
+          node node_modules/vite/bin/vite.js build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
       - name: Optimize Laravel & Generate Packages
