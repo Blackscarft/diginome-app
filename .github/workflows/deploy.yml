@@ -41,20 +41,20 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
 
-          # Clear cache terlebih dahulu agar perintah artisan berjalan bersih
-          php artisan optimize:clear
-
-          # Install / update dependency Composer tanpa dev packages
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
-
-          # Regenerate autoload files
-          composer dump-autoload -o --no-scripts
+          # Install dependency terlebih dahulu
+          composer install --optimize-autoloader --no-interaction --prefer-dist
 
           # Buat file .env jika belum ada
           if [ ! -f .env ]; then
               cp .env.example .env
               php artisan key:generate
           fi
+
+          # Clear cache terlebih dahulu agar perintah artisan berjalan bersih
+          php artisan optimize:clear
+
+          # Regenerate autoload files
+          composer dump-autoload -o --no-scripts
 
           # Buat symlink storage jika belum terhubung
           php artisan storage:link || true
@@ -72,12 +72,8 @@ jobs:
           # ----------------------------------------------------
           # 📚 Scribe: Generate API Documentation (Aman Mode Prod)
           # ----------------------------------------------------
-          if php artisan list | grep -q "scribe:generate"; then
-              php artisan vendor:publish --tag=scribe-config --force || true
-              php artisan scribe:generate --no-interaction
-          else
-              echo "⚠️ Scribe tidak terinstall di environment ini (skipped)."
-          fi
+          php artisan vendor:publish --tag=scribe-config --force || true
+          php artisan scribe:generate --no-interaction
 
           # Buat cache baru untuk environment produksi
           php artisan optimize
