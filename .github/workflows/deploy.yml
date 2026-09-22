@@ -17,8 +17,8 @@ jobs:
       # 2. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
         run: |
-          rsync -rlptdz --delete \
-            --no-g --no-o --omit-dir-times\
+          rsync -rltdz --delete \
+            --no-g --no-o --no-p \
             --exclude='.git' \
             --exclude='.github' \
             --exclude='node_modules' \
