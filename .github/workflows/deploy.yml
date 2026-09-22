@@ -14,7 +14,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Sinkronkan File Proyek ke Folder Web CWP 7
+      # 2. Pre-Sync: Amankan Ownership Sebelum Rsync (Mencegah Permission Denied Code 23)
+      - name: Pre-Sync Ownership Fix
+        run: |
+          sudo chown -R digimone:digimone /home/digimone/app.digimone.com/ || true
+
+      # 3. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
         run: |
           rsync -rlptdz --delete \
@@ -23,20 +28,21 @@ jobs:
             --exclude='.github' \
             --exclude='node_modules' \
             --exclude='vendor' \
-            --exclude='storage/*.key' \
-            --exclude='storage/app/public/*' \
-            --exclude='public/storage' \
             --exclude='.env' \
+            --exclude='storage/' \
+            --exclude='bootstrap/cache/' \
+            --exclude='.scribe/' \
+            --exclude='public/storage' \
             ./ /home/digimone/app.digimone.com/
 
-      # 3. Build Node.js Frontend Assets (Vite/Tailwind/Mix)
+      # 4. Build Node.js Frontend Assets (Vite/Tailwind/Mix)
       - name: Build Frontend Assets
         run: |
           cd /home/digimone/app.digimone.com/
           npm install --legacy-peer-deps
           npm run build
 
-      # 4. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
+      # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
       - name: Optimize Laravel & Generate Packages
         run: |
           cd /home/digimone/app.digimone.com/
@@ -73,7 +79,7 @@ jobs:
           # 📚 Scribe: Generate API Documentation (Aman Mode Prod)
           # ----------------------------------------------------
           php artisan vendor:publish --tag=scribe-config --force || true
-          php artisan scribe:generate --no-interaction
+          php artisan scribe:generate --no-interaction || true
 
           # Buat cache baru untuk environment produksi
           php artisan optimize
@@ -86,7 +92,7 @@ jobs:
           php artisan queue:restart
           sudo /usr/bin/supervisorctl restart digimone-worker:* || true
 
-      # 5. Perbaiki Hak Akses / Permission File CWP 7 (Aturan Ketat suPHP / CWP)
+      # 6. Perbaiki Hak Akses / Permission File CWP 7 (Aturan Ketat suPHP / CWP)
       - name: Fix Directory Permissions for CWP 7
         run: |
           cd /home/digimone/app.digimone.com/
