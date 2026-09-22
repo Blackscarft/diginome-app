@@ -14,22 +14,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      #2. Build Assets Frontend di Workspace Runner (Sebelum Rsync)
-      - name: Build Frontend Assets
-        run: |
-          cd /home/digimone/app.digimone.com/
-          npm install --legacy-peer-deps
-          npm run build
-
-      # 3. Pre-Sync: Ubah kepemilikan folder ke gh-runner agar rsync bisa menghapus/menulis
-      - name: Pre-Sync Ownership
-        run: |
-          sudo chown -R gh-runner:gh-runner /home/digimone/app.digimone.com/
-
-      # 4. Sinkronkan File Proyek ke Folder Web CWP 7
+      # 2. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
         run: |
-          rsync -rlptdz --delete \
+          rsync -rltdz --delete \
             --no-g --no-o --no-p --omit-dir-times \
             --exclude='.git' \
             --exclude='.github' \
@@ -41,6 +29,13 @@ jobs:
             --exclude='.scribe/' \
             --exclude='public/storage' \
             ./ /home/digimone/app.digimone.com/
+      
+      #2. Build Assets Frontend di Workspace Runner (Sebelum Rsync)
+      - name: Build Frontend Assets
+        run: |
+          cd /home/digimone/app.digimone.com/
+          npm install --legacy-peer-deps
+          npm run build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
       - name: Optimize Laravel & Generate Packages
@@ -100,9 +95,6 @@ jobs:
           # 1. Kembalikan ownership ke user digimone
           sudo chown -R digimone:digimone .
           
-          # 2. Reset folder ke 755 & file ke 644 (Aturan suPHP CWP 7)
-          sudo find . -type d -exec chmod 755 {} +
-          sudo find . -type f -exec chmod 644 {} +
-          
-          # 3. Restor permission eksekusi artisan
-          sudo chmod +x artisan
+          # 2. Cukup atur permission folder storage dan bootstrap/cache
+          chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+          chmod +x artisan 2>/dev/null || true
