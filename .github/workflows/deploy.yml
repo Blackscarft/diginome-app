@@ -40,6 +40,10 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           npm install --legacy-peer-deps
+
+          # Fix izin eksekusi untuk biner node_modules
+          chmod -R +x node_modules/.bin/
+
           npm run build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
