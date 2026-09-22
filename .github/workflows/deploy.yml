@@ -14,12 +14,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Pre-Sync: Ubah kepemilikan folder ke gh-runner agar rsync bisa menghapus/menulis
+      #2. Build Assets Frontend di Workspace Runner (Sebelum Rsync)
+      - name: Build Frontend Assets
+        run: |
+          cd /home/digimone/app.digimone.com/
+          npm install --legacy-peer-deps
+          npm run build
+
+      # 3. Pre-Sync: Ubah kepemilikan folder ke gh-runner agar rsync bisa menghapus/menulis
       - name: Pre-Sync Ownership
         run: |
           sudo chown -R gh-runner:gh-runner /home/digimone/app.digimone.com/
 
-      # 3. Sinkronkan File Proyek ke Folder Web CWP 7
+      # 4. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
         run: |
           rsync -rlptdz --delete \
@@ -34,14 +41,6 @@ jobs:
             --exclude='.scribe/' \
             --exclude='public/storage' \
             ./ /home/digimone/app.digimone.com/
-
-      # 4. Build Node.js Frontend Assets (Vite/Tailwind/Mix)
-      - name: Build Frontend Assets
-        run: |
-          cd /home/digimone/app.digimone.com/
-          npm install --legacy-peer-deps
-          chmod -R +x node_modules/.bin/
-          npx vite build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
       - name: Optimize Laravel & Generate Packages
