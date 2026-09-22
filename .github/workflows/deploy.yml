@@ -91,12 +91,12 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Ubah kepemilikan file & folder ke digimone (Hanya baris ini yang butuh sudo)
+          # 1. Paksa ownership ke user digimone
           sudo chown -R digimone:digimone .
           
-          # 2. Reset permission folder ke 755 & file ke 644 (Tanpa sudo, karena owner sudah digimone)
-          find . -type d -exec chmod 755 {} +
-          find . -type f -exec chmod 644 {} +
+          # 2. Reset folder ke 755 & file ke 644 (Aturan suPHP CWP 7)
+          sudo find . -type d -exec chmod 755 {} +
+          sudo find . -type f -exec chmod 644 {} +
           
-          # 3. Kembalikan izin eksekusi untuk artisan
-          chmod +x artisan
+          # 3. Restor permission eksekusi artisan
+          sudo chmod +x artisan
