@@ -91,17 +91,12 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Ubah kepemilikan file & folder ke digimone (Sudah diizinkan di sudoers)
-          sudo /bin/chown -R digimone:digimone .
+          # 1. Ubah kepemilikan file & folder ke digimone (Hanya baris ini yang butuh sudo)
+          sudo chown -R digimone:digimone .
           
-          # 2. Reset permission folder ke 755 & file ke 644 tanpa sudo find
-          chmod -R 755 .
-          sudo /bin/chmod -R 644 .
-          sudo /bin/chmod -R 755 .
-          
-          # 3. Jalankan chmod bertahap untuk folder dan file
+          # 2. Reset permission folder ke 755 & file ke 644 (Tanpa sudo, karena owner sudah digimone)
           find . -type d -exec chmod 755 {} +
           find . -type f -exec chmod 644 {} +
           
-          # 4. Kembalikan izin eksekusi untuk artisan
+          # 3. Kembalikan izin eksekusi untuk artisan
           chmod +x artisan
