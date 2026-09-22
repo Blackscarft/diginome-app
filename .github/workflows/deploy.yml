@@ -28,31 +28,38 @@ jobs:
             --exclude='.env' \
             ./ /home/digimone/app.digimone.com/
 
-      # 3. Jalankan Optimasi & Migrasi Laravel di Server (Dikomenter Sementara)
-      # - name: Optimize Laravel
-      #   run: |
-      #     cd /home/digimone/app.digimone.com/
-      #
-      #     # Install / update dependency Composer tanpa dev packages
-      #     composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-      #
-      #     # Buat file .env jika belum ada
-      #     if [ ! -f .env ]; then
-      #         cp .env.example .env
-      #         php artisan key:generate
-      #     fi
-      #
-      #     # Buat symlink storage jika belum terhubung
-      #     php artisan storage:link || true
-      #
-      #     # Bersihkan cache lama lalu buat cache baru
-      #     php artisan optimize:clear
-      #     php artisan optimize
-      #     php artisan view:cache
-      #     php artisan event:cache
-      #
-      #     # Jalankan migrasi database
-      #     php artisan migrate --force
+     # 3. Install / Update Node.js Dependencies (Jika Diperlukan)
+      - name: Install Node.js Dependencies
+        run: |
+          cd /home/digimone/app.digimone.com/
+          npm install --legacy-peer-deps
+          npm run build
+
+      # 4. Jalankan Optimasi & Migrasi Laravel di Server (Dikomenter Sementara)
+      - name: Optimize Laravel
+        run: |
+          cd /home/digimone/app.digimone.com/
+      
+          # Install / update dependency Composer tanpa dev packages
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+      
+          # Buat file .env jika belum ada
+          if [ ! -f .env ]; then
+              cp .env.example .env
+              php artisan key:generate
+          fi
+      
+          # Buat symlink storage jika belum terhubung
+          php artisan storage:link || true
+      
+          # Bersihkan cache lama lalu buat cache baru
+          php artisan optimize:clear
+          php artisan optimize
+          php artisan view:cache
+          php artisan event:cache
+      
+          # Jalankan migrasi database
+          php artisan migrate --force
 
       # 4. Perbaiki Hak Akses / Permission File CWP 7
       - name: Fix Directory Permissions
