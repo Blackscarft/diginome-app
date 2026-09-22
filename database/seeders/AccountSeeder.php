@@ -16,7 +16,7 @@ class AccountSeeder extends Seeder
         // ==========================================
         // AKUN AKUNTANSI Asset
         // ==========================================
-        $aset = Account::create([
+        $aset = Account::firstOrCreate([
             'parent_id' => -1,
             'order' => 1,
             'code' => '1-0000',
@@ -26,7 +26,7 @@ class AccountSeeder extends Seeder
             'is_active' => true,
         ]);
 
-            $aset_lancar = Account::create([
+            $aset_lancar = Account::firstOrCreate([
                 'parent_id' => $aset->id,
                 'order' => 1,
                 'code' => '1-1000',
@@ -36,7 +36,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                $kas = Account::create([
+                $kas = Account::firstOrCreate([
                     'parent_id' => $aset_lancar->id,
                     'order' => 1,
                     'code' => '1-1100',
@@ -46,7 +46,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $kas->id,
                         'order' => 1,
                         'code' => '1-1101',
@@ -56,7 +56,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $kas->id,
                         'order' => 2,
                         'code' => '1-1102',
@@ -66,7 +66,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
                 
-                $bank = Account::create([
+                $bank = Account::firstOrCreate([
                     'parent_id' => $aset_lancar->id,
                     'order' => 2,
                     'code' => '1-1200',
@@ -76,7 +76,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $bank->id,
                         'order' => 1,
                         'code' => '1-1201',
@@ -86,7 +86,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $bank->id,
                         'order' => 2,
                         'code' => '1-1202',
@@ -96,7 +96,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $bank->id,
                         'order' => 3,
                         'code' => '1-1203',
@@ -106,7 +106,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                $piutang = Account::create([
+                $piutang = Account::firstOrCreate([
                     'parent_id' => $aset_lancar->id,
                     'order' => 3,
                     'code' => '1-1300',
@@ -116,7 +116,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $piutang->id,
                         'order' => 1,
                         'code' => '1-1301',
@@ -126,7 +126,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $piutang->id,
                         'order' => 2,
                         'code' => '1-1302',
@@ -136,7 +136,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
                 
-                $persediaan = Account::create([
+                $persediaan = Account::firstOrCreate([
                     'parent_id' => $aset_lancar->id,
                     'order' => 4,
                     'code' => '1-1400',
@@ -146,7 +146,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $persediaan->id,
                         'order' => 1,
                         'code' => '1-1401',
@@ -156,7 +156,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
                 
-                $uang_muka = Account::create([
+                $uang_muka = Account::firstOrCreate([
                     'parent_id' => $aset_lancar->id,
                     'order' => 5,
                     'code' => '1-1500',
@@ -166,7 +166,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $uang_muka->id,
                         'order' => 1,
                         'code' => '1-1501',
@@ -176,7 +176,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $uang_muka->id,
                         'order' => 1,
                         'code' => '1-1502',
@@ -188,7 +188,7 @@ class AccountSeeder extends Seeder
 
 
             // Sub-Akun Aset: Aset Tidak Lancar (Assets)
-            $aset_tidak_lancar = Account::create([
+            $aset_tidak_lancar = Account::firstOrCreate([
                 'parent_id' => $aset->id,
                 'order' => 2,
                 'code' => '1-2000',
@@ -198,7 +198,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                $tanah = Account::create([
+                $tanah = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 1,
                     'code' => '1-2100',
@@ -208,7 +208,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
                 
-                $bangunan = Account::create([
+                $bangunan = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 2,
                     'code' => '1-2200',
@@ -218,7 +218,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                $kendaraan = Account::create([
+                $kendaraan = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 3,
                     'code' => '1-2300',
@@ -228,7 +228,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                $inventaris = Account::create([
+                $inventaris = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 4,
                     'code' => '1-2400',
@@ -239,7 +239,7 @@ class AccountSeeder extends Seeder
                 ]);
 
 
-                $akumulasi_penyusutan = Account::create([
+                $akumulasi_penyusutan = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 5,
                     'code' => '1-2500',
@@ -249,7 +249,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                $investasi = Account::create([
+                $investasi = Account::firstOrCreate([
                     'parent_id' => $aset_tidak_lancar->id,
                     'order' => 6,
                     'code' => '1-2600',
@@ -263,7 +263,7 @@ class AccountSeeder extends Seeder
         // AKUN AKUNTANSI Kewajiban (Liabilities)
         // ==========================================
 
-        $kewajiban = Account::create([
+        $kewajiban = Account::firstOrCreate([
             'parent_id' => -1,
             'order' => 2,
             'code' => '2-0000',
@@ -274,7 +274,7 @@ class AccountSeeder extends Seeder
         ]);
 
             //Kewajiban Lancar (jangka pendek)
-            $kewajiban_lancar = Account::create([ 
+            $kewajiban_lancar = Account::firstOrCreate([ 
                 'parent_id' => $kewajiban->id,
                 'order' => 1,
                 'code' => '2-1000',
@@ -284,7 +284,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                $hutang = Account::create([
+                $hutang = Account::firstOrCreate([
                     'parent_id' => $kewajiban_lancar->id,
                     'order' => 1,
                     'code' => '2-1100',
@@ -294,7 +294,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $hutang->id,
                         'order' => 2,
                         'code' => '2-1101',
@@ -304,7 +304,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $hutang->id,
                         'order' => 2,
                         'code' => '2-1102',
@@ -314,7 +314,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-            $kewajiban_tidak_lancar = Account::create([
+            $kewajiban_tidak_lancar = Account::firstOrCreate([
                 'parent_id' => $kewajiban->id,
                 'order' => 2,
                 'code' => '2-2000',
@@ -324,7 +324,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                $hutang_jangka_panjang = Account::create([
+                $hutang_jangka_panjang = Account::firstOrCreate([
                     'parent_id' => $kewajiban_tidak_lancar->id,
                     'order' => 1,
                     'code' => '2-2100',
@@ -334,7 +334,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $hutang_jangka_panjang->id,
                         'order' => 2,
                         'code' => '2-2101',
@@ -344,7 +344,7 @@ class AccountSeeder extends Seeder
                         'is_active' => true,
                     ]);
 
-                    Account::create([
+                    Account::firstOrCreate([
                         'parent_id' => $hutang_jangka_panjang->id,
                         'order' => 2,
                         'code' => '2-2102',
@@ -357,7 +357,7 @@ class AccountSeeder extends Seeder
         // ==========================================
         // AKUN AKUNTANSI Modal / Dana (Equity)
         // ==========================================
-        $dana = Account::create([
+        $dana = Account::firstOrCreate([
             'parent_id' => -1,
             'order' => 3,
             'code' => '3-0000',
@@ -367,7 +367,7 @@ class AccountSeeder extends Seeder
             'is_active' => true,
         ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $dana->id,
                 'order' => 1,
                 'code' => '3-1000',
@@ -377,7 +377,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $dana->id,
                 'order' => 2,
                 'code' => '3-2000',
@@ -387,7 +387,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $dana->id,
                 'order' => 3,
                 'code' => '3-3000',
@@ -401,7 +401,7 @@ class AccountSeeder extends Seeder
         // AKUN AKUNTANSI Penerimaan (Revenue)
         // ==========================================
 
-        $pengerimaan = Account::create([
+        $pengerimaan = Account::firstOrCreate([
             'parent_id' => -1,
             'order' => 4,
             'code' => '4-0000',
@@ -411,7 +411,7 @@ class AccountSeeder extends Seeder
             'is_active' => true,
         ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $pengerimaan->id,
                 'order' => 1,
                 'code' => '4-1000',
@@ -421,7 +421,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $pengerimaan->id,
                 'order' => 2,
                 'code' => '4-2000',
@@ -431,7 +431,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            Account::create([
+            Account::firstOrCreate([
                 'parent_id' => $pengerimaan->id,
                 'order' => 3,
                 'code' => '4-3000',
@@ -445,7 +445,7 @@ class AccountSeeder extends Seeder
         // AKUN AKUNTANSI Pengeluaran / Penyaluran (Expense)
         // ==========================================
 
-        $pengeluaran = Account::create([
+        $pengeluaran = Account::firstOrCreate([
             'parent_id' => -1,
             'order' => 5,
             'code' => '5-0000',
@@ -455,7 +455,7 @@ class AccountSeeder extends Seeder
             'is_active' => true,
         ]);
 
-            $penyaluran = Account::create([
+            $penyaluran = Account::firstOrCreate([
                 'parent_id' => $pengeluaran->id,
                 'order' => 1,
                 'code' => '5-1000',
@@ -465,7 +465,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $penyaluran->id,
                     'order' => 1,
                     'code' => '5-1100',
@@ -475,7 +475,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $penyaluran->id,
                     'order' => 2,
                     'code' => '5-1200',
@@ -485,7 +485,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-            $beban = Account::create([
+            $beban = Account::firstOrCreate([
                 'parent_id' => $pengeluaran->id,
                 'order' => 2,
                 'code' => '5-2000',
@@ -495,7 +495,7 @@ class AccountSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $beban->id,
                     'order' => 1,
                     'code' => '5-2100',
@@ -505,7 +505,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $beban->id,
                     'order' => 2,
                     'code' => '5-2200',
@@ -515,7 +515,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $beban->id,
                     'order' => 3,
                     'code' => '5-2300',
@@ -525,7 +525,7 @@ class AccountSeeder extends Seeder
                     'is_active' => true,
                 ]);
 
-                Account::create([
+                Account::firstOrCreate([
                     'parent_id' => $beban->id,
                     'order' => 4,
                     'code' => '5-2400',
