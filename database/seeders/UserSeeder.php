@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $superadmin = User::firstOrCreate([
+        $superadmin = User::firstOrCreate(
             // Argumen 1: Kriteria Unik untuk Pencarian
             [
                 'email' => 'superadmin@digimone.com',
@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
                 'name' => 'superadmin',
                 'password' => 'superrahasia'
             ]
-        ]);
+        );
 
         if (method_exists($superadmin, 'assignRole')) {
             $superadmin->assignRole('super_admin');
