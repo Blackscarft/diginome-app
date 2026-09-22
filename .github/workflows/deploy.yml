@@ -14,6 +14,11 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # 2. Perbaiki Hak Akses Sementara untuk Sinkronisasi File ke gh-runner
+      - name: Prepare Sync ownership
+        run: |
+          sudo chown -R gh-runner:gh-runner /home/digimone/app.digimone.com/
+
       # 2. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
         run: |
@@ -34,6 +39,11 @@ jobs:
       - name: Build Frontend Assets
         run: |
           cd /home/digimone/app.digimone.com/
+
+          # 1. Ubah kepemilikan sementara ke gh-runner agar npm & vite bebas menulis file
+          sudo chown -R gh-runner:gh-runner .
+
+          # 2. Install & Build Assets Frontend
           npm install --legacy-peer-deps
           npm run build
 
@@ -95,6 +105,6 @@ jobs:
           # 1. Kembalikan ownership ke user digimone
           sudo chown -R digimone:digimone .
           
-          # 2. Cukup atur permission folder storage dan bootstrap/cache
-          chmod -R 775 storage bootstrap/cache 2>/dev/null || true
-          chmod +x artisan 2>/dev/null || true
+          # 2. Atur izin akses direktori storage, cache, & artisan
+          sudo chmod -R 775 storage bootstrap/cache 2>/dev/null || true
+          sudo chmod +x artisan 2>/dev/null || true
