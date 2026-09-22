@@ -40,11 +40,12 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
 
-          # 1. Ubah kepemilikan sementara ke gh-runner agar npm & vite bebas menulis file
-          sudo chown -R gh-runner:gh-runner .
-
           # 2. Install & Build Assets Frontend
           npm install --legacy-peer-deps
+
+          # 3. Atur IZIN EKSEKUSI DI SINI (Setelah node_modules terbentuk)
+          sudo chmod -R +x node_modules/.bin/ 2>/dev/null || true
+
           npm run build
 
       # 5. Jalankan Optimasi, Migrasi, Shield, Scribe, & Queue
