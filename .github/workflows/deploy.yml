@@ -91,17 +91,17 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Paksa ubah seluruh kepemilikan file & folder ke digimone
-          sudo chown -R digimone:digimone .
+          # 1. Ubah kepemilikan file & folder ke digimone (Sudah diizinkan di sudoers)
+          sudo /bin/chown -R digimone:digimone .
           
-          # 2. Paksa SEMUA folder menjadi 755 (CWP 7 melarang 775)
-          sudo find . -type d -exec chmod 755 {} +
+          # 2. Reset permission folder ke 755 & file ke 644 tanpa sudo find
+          chmod -R 755 .
+          sudo /bin/chmod -R 644 .
+          sudo /bin/chmod -R 755 .
           
-          # 3. Paksa SEMUA file biasa menjadi 644
-          sudo find . -type f -exec chmod 644 {} +
+          # 3. Jalankan chmod bertahap untuk folder dan file
+          find . -type d -exec chmod 755 {} +
+          find . -type f -exec chmod 644 {} +
           
-          # 4. Kembalikan permission eksekusi untuk artisan
-          sudo chmod +x artisan
-          
-          # 5. Set izin khusus storage & bootstrap/cache
-          sudo chmod -R 755 storage bootstrap/cache 2>/dev/null || true
+          # 4. Kembalikan izin eksekusi untuk artisan
+          chmod +x artisan
