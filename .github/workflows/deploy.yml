@@ -14,11 +14,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Pre-Sync: Amankan Ownership Sebelum Rsync (Mencegah Permission Denied Code 23)
-      - name: Pre-Sync Ownership Fix
+      # Pre-Sync: Ubah kepemilikan folder ke gh-runner agar rsync bisa menghapus/menulis
+      - name: Pre-Sync Ownership
         run: |
-          # Berikan akses write penuh ke folder yang bermasalah sebelum rsync
-          chmod -R 775 /home/digimone/app.digimone.com/app/Policies /home/digimone/app.digimone.com/public/build 2>/dev/null || true
+          sudo chown -R gh-runner:gh-runner /home/digimone/app.digimone.com/
 
       # 3. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
