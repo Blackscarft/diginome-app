@@ -14,9 +14,15 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $superadmin = User::firstOrCreate([
-            'name' => 'superadmin',
-            'email' => 'superadmin@digimone.com',
-            'password' => 'superrahasia'
+            // Argumen 1: Kriteria Unik untuk Pencarian
+            [
+                'email' => 'superadmin@digimone.com',
+            ],
+            // Argumen 2: Nilai yang diisi HANYA jika record belum ditemukan
+            [
+                'name' => 'superadmin',
+                'password' => 'superrahasia'
+            ]
         ]);
 
         if (method_exists($superadmin, 'assignRole')) {
