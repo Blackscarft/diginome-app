@@ -91,18 +91,12 @@ jobs:
         run: |
           cd /home/digimone/app.digimone.com/
           
-          # 1. Paksa SEMUA file & folder menjadi milik user & group digimone
-          sudo chown -R digimone:digimone .
+          # Reset folder ke 755 & file ke 644
+          find . -type d -exec chmod 755 {} \; 2>/dev/null || true
+          find . -type f -exec chmod 644 {} \; 2>/dev/null || true
           
-          # 2. Reset SEMUA folder ke 755 (CWP 7 MELARANG folder 775!)
-          find . -type d -exec chmod 755 {} \;
+          # Kembalikan permission execute untuk artisan
+          chmod +x artisan || true
           
-          # 3. Reset SEMUA file ke 644 (CWP 7 MELARANG file 775!)
-          find . -type f -exec chmod 644 {} \;
-          
-          # 4. Kembalikan permission execute khusus file artisan
-          chmod +x artisan
-          
-          # 5. Khusus folder storage & cache, tetapkan 755 (bukan 775)
-          # Karena owner sudah digimone, permission 755 sudah CUKUP agar PHP-FPM digimone bisa menulis.
-          chmod -R 755 storage bootstrap/cache
+          # Set permission storage & cache
+          chmod -R 755 storage bootstrap/cache || true
