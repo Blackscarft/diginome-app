@@ -41,7 +41,7 @@ jobs:
           cd /home/digimone/app.digimone.com/
 
           # Install / update dependency Composer tanpa dev packages
-          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+          composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
           # Buat file .env jika belum ada
           if [ ! -f .env ]; then

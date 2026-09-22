@@ -113,7 +113,7 @@ return [
         'default' => 'x-api-key',
 
         // Where is the auth value meant to be sent in a request?
-        'in' => AuthIn::HEADER->value,
+        'in' => 'bearer', // Options: "query", "body", "bearer", "basic", "header"
 
         // The name of the auth parameter (e.g. token, key, apiKey) or header (e.g. Authorization, Api-Key).
         'name' => 'X-API-KEY',
