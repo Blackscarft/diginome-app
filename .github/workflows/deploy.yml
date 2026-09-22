@@ -17,7 +17,8 @@ jobs:
       # 2. Pre-Sync: Amankan Ownership Sebelum Rsync (Mencegah Permission Denied Code 23)
       - name: Pre-Sync Ownership Fix
         run: |
-          sudo chown -R digimone:digimone /home/digimone/app.digimone.com/ || true
+          # Berikan akses write penuh ke folder yang bermasalah sebelum rsync
+          chmod -R 775 /home/digimone/app.digimone.com/app/Policies /home/digimone/app.digimone.com/public/build 2>/dev/null || true
 
       # 3. Sinkronkan File Proyek ke Folder Web CWP 7
       - name: Sync Files to Web Directory
