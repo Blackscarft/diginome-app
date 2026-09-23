@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\ManageAccounts;
 use App\Filament\Pages\ManageExports;
+use App\Filament\Widgets\QueueWorkerStatusWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -57,6 +58,7 @@ class DashboardPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+                QueueWorkerStatusWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
