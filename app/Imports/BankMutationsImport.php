@@ -9,25 +9,27 @@ use Filament\Actions\Imports\Models\Import;
 use Filament\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\OnEachRow;
 use Maatwebsite\Excel\Concerns\RegistersEventListeners;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnError;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\BeforeImport;
 use Maatwebsite\Excel\Events\ImportFailed;
 use Maatwebsite\Excel\Row;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Throwable;
 
 class BankMutationsImport implements
     OnEachRow,
     WithHeadingRow,
-    WithValidation,
     SkipsOnFailure,
+    SkipsOnError,
     WithChunkReading,
     ShouldQueue,
     WithEvents
@@ -41,21 +43,90 @@ class BankMutationsImport implements
     ) {}
 
     /**
-     * Validasi setiap baris.
+     * Proses setiap baris secara manual dengan validasi eksplisit.
      */
-    public function rules(): array
+    public function onRow(Row $excelRow): void
     {
-        return [
+        $row = $excelRow->toArray();
+
+        // 1. Normalisasi tanggal & waktu dari format Excel Serial Number
+        if (isset($row['tanggal']) && is_numeric($row['tanggal'])) {
+            $row['tanggal'] = Date::excelToDateTimeObject($row['tanggal'])->format('Y-m-d');
+        }
+
+        if (isset($row['waktu']) && is_numeric($row['waktu'])) {
+            $row['waktu'] = Date::excelToDateTimeObject($row['waktu'])->format('H:i:s');
+        }
+
+        // 2. JALANKAN VALIDASI SECARA MANUAL
+        $validator = Validator::make($row, [
             'kode_bank' => ['required'],
             'nama_bank' => ['required', 'string'],
-            'tanggal' => ['required'],
+            'tanggal'   => ['required', 'date'],
             'deskripsi' => ['required', 'string'],
-        ];
+            'debit'     => ['nullable', 'numeric'],
+            'kredit'    => ['nullable', 'numeric'],
+            'waktu'     => ['nullable', 'date_format:H:i:s'],
+            'referensi' => ['nullable'],
+        ]);
+
+        // Jika data tidak valid (misal: debit/kredit berisi string 'asdasdasd')
+        if ($validator->fails()) {
+            FailedImportRow::create([
+                'import_id'        => $this->importRecordId,
+                'data'             => $row,
+                'validation_error' => implode(', ', $validator->errors()->all()),
+            ]);
+
+            DB::table('imports')
+                ->where('id', $this->importRecordId)
+                ->increment('processed_rows');
+
+            return; // HENTIKAN proses untuk baris ini, lanjut ke baris berikutnya
+        }
+
+        // 3. JIKA LOLOS VALIDASI, SIMPAN KE DATABASE DENGAN TRY-CATCH
+        try {
+            DB::transaction(function () use ($row) {
+                BankMutation::create([
+                    'bank_code'        => (string) $row['kode_bank'],
+                    'bank_name'        => $row['nama_bank'],
+                    'transaction_date' => $row['tanggal'],
+                    'transaction_time' => $row['waktu'] ?? null,
+                    'debit'            => $row['debit'] ?? 0,
+                    'credit'           => $row['kredit'] ?? 0,
+                    'reference'        => $row['referensi'] ?? null,
+                    'description'      => $row['deskripsi'],
+                    'is_matched'       => false,
+                ]);
+
+                DB::table('imports')
+                    ->where('id', $this->importRecordId)
+                    ->increment('successful_rows');
+
+                DB::table('imports')
+                    ->where('id', $this->importRecordId)
+                    ->increment('processed_rows');
+            });
+        } catch (Throwable $e) {
+            // Tangkap jika terjadi database error tak terduga agar job queue tidak mati
+            FailedImportRow::create([
+                'import_id'        => $this->importRecordId,
+                'data'             => $row,
+                'validation_error' => 'Database Error: ' . $e->getMessage(),
+            ]);
+
+            DB::table('imports')
+                ->where('id', $this->importRecordId)
+                ->increment('processed_rows');
+        }
     }
 
-    /**
-     * Dipanggil sebelum import dimulai.
-     */
+    public function onError(Throwable $e): void
+    {
+        // Tetap dipertahankan untuk mengantisipasi error di luar onRow
+    }
+
     public function beforeImport(BeforeImport $event): void
     {
         $import = Import::find($this->importRecordId);
@@ -65,7 +136,6 @@ class BankMutationsImport implements
         }
 
         $rows = $event->getReader()->getTotalRows();
-
         $totalRows = max(0, (array_values($rows)[0] ?? 0) - 1);
 
         $import->update([
@@ -73,59 +143,12 @@ class BankMutationsImport implements
         ]);
     }
 
-    /**
-     * Dipanggil setiap baris.
-     */
-    public function onRow(Row $excelRow): void
-    {
-        $row = $excelRow->toArray();
-
-        $transactionDate = is_numeric($row['tanggal'])
-            ? Date::excelToDateTimeObject($row['tanggal'])->format('Y-m-d')
-            : $row['tanggal'];
-
-        DB::transaction(function () use ($row, $transactionDate) {
-
-            BankMutation::create([
-                'bank_code'        => (string) $row['kode_bank'],
-                'bank_name'        => $row['nama_bank'],
-                'transaction_date' => $transactionDate,
-                'transaction_time' => $row['waktu'] ?? null,
-                'debit'            => $row['debit'] ?? 0,
-                'credit'           => $row['kredit'] ?? 0,
-                'reference'        => $row['referensi'] ?? null,
-                'description'      => $row['deskripsi'],
-                'is_matched'       => false,
-            ]);
-
-            // Update statistik Filament
-            DB::table('imports')
-                ->where('id', $this->importRecordId)
-                ->update([
-                    'successful_rows' => DB::raw('successful_rows + 1'),
-                    'processed_rows'  => DB::raw('processed_rows + 1'),
-                ]);
-        });
-    }
-
-    /**
-     * Dipanggil setelah seluruh import selesai.
-     */
     public function afterImport(AfterImport $event): void
     {
         $importRecord = Import::find($this->importRecordId);
 
         if (! $importRecord) {
             return;
-        }
-
-        // Simpan failed rows
-        foreach ($this->failures() as $failure) {
-            FailedImportRow::create([
-                'import_id'        => $importRecord->id,
-                'data'             => $failure->values(),
-                'validation_error' => implode(', ', $failure->errors()),
-            ]);
         }
 
         $failedCount = FailedImportRow::where('import_id', $importRecord->id)->count();
@@ -144,17 +167,19 @@ class BankMutationsImport implements
         }
 
         Notification::make()
-            ->title($failedCount > 0 ? 'Import Selesai dengan Catatan' : 'Import Mutasi Bank Berhasil')
+            ->title(
+                $failedCount > 0
+                    ? 'Import Selesai dengan Catatan'
+                    : 'Import Mutasi Bank Berhasil'
+            )
             ->body(
                 "File {$importRecord->file_name} telah selesai diproses ({$importRecord->successful_rows} berhasil, {$failedCount} gagal)."
             )
             ->color($failedCount > 0 ? 'warning' : 'success')
+            ->icon($failedCount > 0 ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
             ->sendToDatabase($user);
     }
 
-    /**
-     * Jika import gagal total.
-     */
     public function importFailed(ImportFailed $event): void
     {
         $importRecord = Import::find($this->importRecordId);
@@ -169,18 +194,15 @@ class BankMutationsImport implements
 
         if ($user = User::find($this->userId)) {
             Notification::make()
-                ->title('Import Mutasi Bank Gagal')
+                ->title('Import Mutasi Bank Gagal Total')
                 ->body(
-                    "Terjadi kesalahan saat memproses {$importRecord->file_name}: {$event->getException()->getMessage()}"
+                    "Terjadi kesalahan sistem saat memproses file {$importRecord->file_name}: {$event->getException()->getMessage()}"
                 )
                 ->danger()
                 ->sendToDatabase($user);
         }
     }
 
-    /**
-     * Ukuran chunk.
-     */
     public function chunkSize(): int
     {
         return 1000;
