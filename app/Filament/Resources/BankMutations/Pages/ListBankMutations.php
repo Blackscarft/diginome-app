@@ -14,10 +14,6 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 
-// Import Action default Filament (hanya bisa csv)
-use Filament\Actions\ImportAction;
-use App\Filament\Imports\BankMutationImporter; // Import Importer
-
 class ListBankMutations extends ListRecords
 {
     protected static string $resource = BankMutationResource::class;
@@ -25,12 +21,6 @@ class ListBankMutations extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // ImportAction::make()
-            //     ->importer(BankMutationImporter::class)
-            //     ->label('Import Mutasi Bank')
-            //     ->icon('heroicon-o-document-arrow-up')
-            //     ->color('success'),
-            
             Action::make('importExcel')
                 ->label('Import Mutasi Bank (.xlsx)')
                 ->icon('heroicon-o-document-arrow-up')
@@ -73,10 +63,7 @@ class ListBankMutations extends ListRecords
                     // Karena FileUpload menyimpan file di disk, kita pakai pathinfo() untuk mengambil nama aslinya
                     $fileName = basename($storedFilePath);
 
-                    // 3. Format Custom Name (Gunakan tanggal/timestamp agar tidak ada ekstensi ganda)
-                    // $customFileName = 'Mutasi_Bank_' . now()->format('Ymd_His') . '_' . $originalFileName;
-                    
-                    // 4. Simpan data ke Tabel Imports
+                    // 3. Simpan data ke Tabel Imports
                     $importRecord = Import::create([
                         'user_id' => Auth::id(),
                         'importer' => BankMutationsImport::class,
@@ -87,13 +74,14 @@ class ListBankMutations extends ListRecords
                         'processed_rows' => 0
                     ]);
 
-                    // 5. Masukkan proses import ke Queue (Background)
+                    // 4. Masukkan proses import ke Queue (Background)
                     Excel::queueImport(
                         new BankMutationsImport($importRecord->id, Auth::id()), 
                         $storedFilePath, 
                         'local' // Disk penyimpanan Laravel (default: storage/app)
                     );
 
+                    // 5. Kirim notifikasi
                     Notification::make()
                         ->title('Import Dimulai di Background')
                         ->body('File Anda sedang diproses di antrean server. Anda dapat melanjutkan pekerjaan lain.')
