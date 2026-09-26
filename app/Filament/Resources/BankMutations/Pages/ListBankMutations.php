@@ -59,6 +59,9 @@ class ListBankMutations extends ListRecords
                         ])
                         ->storeFiles(true)
                         ->directory('imports/bank_mutations')
+                        ->getUploadedFileNameForStorageUsing(
+                            fn ($file) => 'Mutasi_Bank_' . now()->format('Ymd_His') . '_' . $file->getClientOriginalName()
+                        )
                         ->required()
                         ->maxSize(10240), // Maksimal ukuran file 10MB
                 ])
@@ -68,16 +71,16 @@ class ListBankMutations extends ListRecords
 
                     // 2. Ambil nama file asli (misal: "data_mutasi_januari.xlsx")
                     // Karena FileUpload menyimpan file di disk, kita pakai pathinfo() untuk mengambil nama aslinya
-                    $originalFileName = basename($storedFilePath);
+                    $fileName = basename($storedFilePath);
 
                     // 3. Format Custom Name (Gunakan tanggal/timestamp agar tidak ada ekstensi ganda)
-                    $customFileName = 'Mutasi_Bank_' . now()->format('Ymd_His') . '_' . $originalFileName;
+                    // $customFileName = 'Mutasi_Bank_' . now()->format('Ymd_His') . '_' . $originalFileName;
                     
                     // 4. Simpan data ke Tabel Imports
                     $importRecord = Import::create([
                         'user_id' => Auth::id(),
                         'importer' => BankMutationsImport::class,
-                        'file_name' => $customFileName,
+                        'file_name' => $fileName,
                         'file_path' => $storedFilePath,
                         'total_rows' => 0,
                         'successful_rows' => 0,
