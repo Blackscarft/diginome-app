@@ -2,11 +2,13 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Exports\FailedImportRowExporter;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\ExportAction;
+use Filament\Actions\Imports\Models\FailedImportRow;
 use Filament\Actions\Imports\Models\Import;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -23,7 +25,7 @@ class ManageImports extends Page implements HasTable
     use InteractsWithTable;
     use InteractsWithActions;
 
-    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-folder-open';
+    protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-document-arrow-up';
 
     protected static ?string $navigationLabel = 'Riwayat Import';
 
@@ -45,12 +47,37 @@ class ManageImports extends Page implements HasTable
                     ->label('Pengunggah')
                     ->searchable()
                     ->default('-'),
+                
+                TextColumn::make('importer')
+                    ->label('Tipe Import')
+                    ->searchable()
+                    ->formatStateUsing(fn (string $state): string => class_basename($state)),
 
                 TextColumn::make('file_name')
                     ->label('Nama File')
                     ->searchable()
                     ->limit(35)
-                    ->tooltip(fn (Import $record) => $record->file_name),
+                    ->tooltip(fn (Import $record) => $record->file_name)
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('info')
+                    ->action(function (Import $record) {
+                        // Cek keberadaan file di storage 'local'
+                        if (Storage::disk('local')->exists($record->file_path)) {
+                            return response()->download(
+                                Storage::disk('local')->path($record->file_path),
+                                $record->file_name,
+                                [
+                                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                ]
+                            );
+                        }
+
+                        Notification::make()
+                            ->title('File Tidak Ditemukan')
+                            ->body('File fisik sudah tidak ada di server.')
+                            ->danger()
+                            ->send();
+                    }),
 
                 TextColumn::make('total_rows')
                     ->label('Total Baris')
@@ -78,34 +105,10 @@ class ManageImports extends Page implements HasTable
                     ->color(fn ($state) => $state ? 'success' : 'warning'),
             ])
             ->recordActions([
-                // Action 1: Download file fisik Excel
-                Action::make('download')
-                    ->label('Download')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('info')
-                    ->action(function (Import $record) {
-                        // Cek keberadaan file di storage 'local'
-                        if (Storage::disk('local')->exists($record->file_path)) {
-                            return response()->download(
-                                Storage::disk('local')->path($record->file_path),
-                                $record->file_name,
-                                [
-                                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                ]
-                            );
-                        }
-
-                        Notification::make()
-                            ->title('File Tidak Ditemukan')
-                            ->body('File fisik sudah tidak ada di server.')
-                            ->danger()
-                            ->send();
-                    }),
-                
                 // ACTION: Lihat Detail Baris Gagal
                 Action::make('viewFailures')
-                    ->label('Detail Error')
-                    ->icon('heroicon-o-exclamation-triangle')
+                    ->label('Lihat Error')
+                    ->icon('heroicon-o-eye')
                     ->color('danger')
                     // Tombol hanya muncul jika ada baris yang gagal
                     ->visible(fn (Import $record) => ($record->total_rows - $record->successful_rows) > 0)
@@ -117,7 +120,16 @@ class ManageImports extends Page implements HasTable
                             'failedRows' => $record->failedRows,
                         ]);
                     }),
+
+                    ExportAction::make('export_errors')
+                        ->label('Export Error')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('danger')
+                        ->exporter(FailedImportRowExporter::class)
+                        ->modifyQueryUsing(fn (Import $record) => FailedImportRow::query()->where('import_id', $record->id))
+                        ->visible(fn (Import $record): bool => $record->failedRows()->count() > 0)
                 ])
+
             ->toolbarActions([
                 BulkActionGroup::make([
                     BulkAction::make('delete_selected')
