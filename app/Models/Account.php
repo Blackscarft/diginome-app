@@ -29,6 +29,10 @@ class Account extends Model
         'is_active' => 'boolean',
     ];
 
+    public function bankAccount(){
+        return $this->hasMany(BankAccount::class);
+    }
+
     public function parent()
     {
         return $this->belongsTo(Account::class, 'parent_id');
