@@ -21,7 +21,8 @@ class UserSeeder extends Seeder
             // Argumen 2: Nilai yang diisi HANYA jika record belum ditemukan
             [
                 'name' => 'superadmin',
-                'password' => 'superrahasia'
+                'password' => 'superrahasia',
+                'is_active' => true,
             ]
         );
 

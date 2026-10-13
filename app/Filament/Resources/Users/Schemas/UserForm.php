@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Users\Schemas;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ToggleButtons;
 
 class UserForm
 {
@@ -49,6 +51,13 @@ class UserForm
                     ->searchable()
                     ->preload()
                     ->native(false), // 1 user = 1 role
+                
+                ToggleButtons::make('is_active')
+                    ->label('Status')
+                    ->boolean('Aktif', 'Nonaktif')
+                    ->inline()
+                    ->required()
+                    ->default(true),
             ]);
     }
 }

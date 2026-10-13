@@ -19,8 +19,8 @@ return new class extends Migration
             $table->string('name');
             $table->enum('normal_balance', ['debit', 'credit'])->default('debit');
             $table->boolean('is_postable')->default(false);
+            $table->boolean('is_active')->default(true);
             
-            $table->softDeletes();
             $table->timestamps();
 
             // Composite Index
