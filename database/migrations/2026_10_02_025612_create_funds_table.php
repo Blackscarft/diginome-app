@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('accounts', function (Blueprint $table) {
+        Schema::create('funds', function (Blueprint $table) {
             $table->id();
             $table->integer('parent_id')->default(-1)->index();
             $table->integer('order')->default(0);
-            $table->string('code', 25)->unique();
-            $table->string('name');
-            $table->enum('normal_balance', ['debit', 'credit'])->default('debit');
-            $table->boolean('is_postable')->default(false);
+
+            $table->string('fund_code', 25)->unique();
+            $table->string('fund_name');
+            $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
@@ -32,6 +32,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('accounts');
+        Schema::dropIfExists('funds');
     }
 };

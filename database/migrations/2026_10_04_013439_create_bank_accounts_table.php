@@ -18,21 +18,19 @@ return new class extends Migration
                 ->constrained('accounts')
                 ->onDelete('restrict'); // Mencegah Akun dihapus jika masih terikat ke Bank
 
-            $table->string('bank_code');
+            $table->string('bank_code')->unique()->index();
             $table->string('bank_name');
             $table->string('account_number')->nullable();
             $table->string('account_holder');
 
             // Saldo Awal saat pertama kali aplikasi Go-Live
             $table->decimal('initial_balance', 15, 2)->default(0);
-            $table->boolean('is_active')->default(true);
             
             $table->text('notes')->nullable();
 
-            $table->timestamps();
+            $table->boolean('is_active')->default(true);
 
-            $table->index('bank_code');
-            $table->index('is_active');
+            $table->timestamps();            
             
             // Composite Index untuk kueri filter akun aktif berdasarkan kode bank
             $table->index(['bank_code', 'is_active']);

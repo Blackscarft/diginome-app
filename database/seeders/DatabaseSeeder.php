@@ -16,9 +16,19 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            // Utility Seeders
             RoleSeeder::class,
             UserSeeder::class,
-            AccountSeeder::class
+
+            // COA Master Data
+            AccountSeeder::class,
+            
+            // Master Data
+            FundSeeder::class,
+            BranchSeeder::class,
+
+            // Initial Transaction Data
+            TransactionTypeSeeder::class
         ]);
     }
 }
