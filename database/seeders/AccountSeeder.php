@@ -27,7 +27,7 @@ class AccountSeeder extends Seeder
                 $kas = Account::firstOrCreate(['code' => '1-1100'], [
                     'parent_id' => $aset_lancar->id, 'order' => 1, 'name' => 'Kas', 'normal_balance' => 'debit', 'is_postable' => false, 'is_active' => true,
                 ]);
-                    Account::firstOrCreate(['code' => '1-1101'], ['parent_id' => $kas->id, 'order' => 1, 'name' => 'Kas Brangkas Pusat', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
+                    Account::firstOrCreate(['code' => '1-1101'], ['parent_id' => $kas->id, 'order' => 1, 'name' => 'Kas Pusat', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
                     Account::firstOrCreate(['code' => '1-1102'], ['parent_id' => $kas->id, 'order' => 2, 'name' => 'Kas Cabang', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
 
                 $bank = Account::firstOrCreate(['code' => '1-1200'], [
@@ -53,6 +53,13 @@ class AccountSeeder extends Seeder
                 ]);
                     Account::firstOrCreate(['code' => '1-1501'], ['parent_id' => $uang_muka->id, 'order' => 1, 'name' => 'Uang Muka Kegiatan', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
                     Account::firstOrCreate(['code' => '1-1502'], ['parent_id' => $uang_muka->id, 'order' => 2, 'name' => 'Uang Muka Sewa', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
+
+                $fintech = Account::firstOrCreate(['code' => '1-1600'], [
+                    'parent_id' => $aset_lancar->id, 'order' => 6, 'name' => 'Fintech', 'normal_balance' => 'debit', 'is_postable' => false, 'is_active' => true,
+                ]);
+                    Account::firstOrCreate(['code' => '1-1601'], ['parent_id' => $fintech->id, 'order' => 1, 'name' => 'QRIS', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
+                    Account::firstOrCreate(['code' => '1-1602'], ['parent_id' => $fintech->id, 'order' => 2, 'name' => 'Domper Digital', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
+                    Account::firstOrCreate(['code' => '1-1603'], ['parent_id' => $fintech->id, 'order' => 3, 'name' => 'Payment Gateway', 'normal_balance' => 'debit', 'is_postable' => true, 'is_active' => true]);
 
             // Aset Tidak Lancar
             $aset_tidak_lancar = Account::firstOrCreate(['code' => '1-2000'], [
