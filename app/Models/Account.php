@@ -38,6 +38,7 @@ class Account extends Model
         return $this->belongsTo(Account::class, 'parent_id');
     }
 
+    // Scope to get only root accounts (is_postable = false)
     public function scopeRootAccounts(Builder $query)
     {
         return $query->where('is_postable', false);

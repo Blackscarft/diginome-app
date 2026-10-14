@@ -110,36 +110,37 @@ class BankAccountsTable
                     ])
                     ->action(function (array $data): void {
                         // 1. Ambil relative path tempat file disimpan di storage
-                    $storedFilePath = $data['file_excel'];
+                        $storedFilePath = $data['file_excel'];
 
-                    // 2. Ambil nama file asli (misal: "data_mutasi_januari.xlsx")
-                    // Karena FileUpload menyimpan file di disk, kita pakai pathinfo() untuk mengambil nama aslinya
-                    $fileName = basename($storedFilePath);
+                        // 2. Ambil nama file asli (misal: "data_mutasi_januari.xlsx")
+                        // Karena FileUpload menyimpan file di disk, kita pakai pathinfo() untuk mengambil nama aslinya
+                        $fileName = basename($storedFilePath);
 
-                    // 3. Simpan data ke Tabel Imports
-                    $importRecord = Import::create([
-                        'user_id' => Auth::id(),
-                        'importer' => BankAccountsImport::class,
-                        'file_name' => $fileName,
-                        'file_path' => $storedFilePath,
-                        'total_rows' => 0,
-                        'successful_rows' => 0,
-                        'processed_rows' => 0
-                    ]);
+                        // 3. Simpan data ke Tabel Imports
+                        $importRecord = Import::create([
+                            'user_id' => Auth::id(),
+                            'importer' => BankAccountsImport::class,
+                            'file_name' => $fileName,
+                            'file_path' => $storedFilePath,
+                            'total_rows' => 0,
+                            'successful_rows' => 0,
+                            'processed_rows' => 0
+                        ]);
 
-                    // 4. Masukkan proses import ke Queue (Background)
-                    Excel::queueImport(
-                        new BankAccountsImport($importRecord->id, Auth::id()), 
-                        $storedFilePath, 
-                        'local' // Disk penyimpanan Laravel (default: storage/app)
-                    );
+                        // 4. Masukkan proses import ke Queue (Background)
+                        Excel::queueImport(
+                            new BankAccountsImport($importRecord->id, Auth::id()), 
+                            $storedFilePath, 
+                            'local' // Disk penyimpanan Laravel (default: storage/app)
+                        );
 
-                    // 5. Kirim notifikasi
-                    Notification::make()
-                        ->title('Import Dimulai di Background')
-                        ->body('File Anda sedang diproses di antrean server. Anda dapat melanjutkan pekerjaan lain.')
-                        ->info()
-                        ->send();
+                        // 5. Kirim notifikasi
+                        Notification::make()
+                            ->title('Import Dimulai di Background')
+                            ->body('File Anda sedang diproses di antrean server. Anda dapat melanjutkan pekerjaan lain.')
+                            ->info()
+                            ->send();
+
                     }),
 
                 // CreateAction::make(),

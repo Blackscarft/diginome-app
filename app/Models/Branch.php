@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use SolutionForest\FilamentTree\Concern\ModelTree;
+use Illuminate\Database\Eloquent\Builder; 
 
 class Branch extends Model
 {
@@ -14,6 +15,7 @@ class Branch extends Model
         'order',
         'branch_code',
         'branch_name',
+        'description',
         'is_active'
     ];
 
@@ -26,5 +28,11 @@ class Branch extends Model
     public function parent()
     {
         return $this->belongsTo(Branch::class, 'parent_id');
+    }
+
+    // Scope to get only root branches (parent_id = -1)
+    public function scopeRootBranches(Builder $query)
+    {
+        return $query->where('is_active', true);
     }
 }
