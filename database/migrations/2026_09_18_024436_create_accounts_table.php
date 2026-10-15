@@ -15,11 +15,13 @@ return new class extends Migration
             $table->id();
             $table->integer('parent_id')->default(-1)->index();
             $table->integer('order')->default(0);
-            $table->string('code', 25)->unique();
-            $table->string('name');
+            $table->string('account_code', 25)->unique();
+            $table->string('account_name');
             $table->enum('normal_balance', ['debit', 'credit'])->default('debit');
             $table->boolean('is_postable')->default(false);
             $table->boolean('is_active')->default(true);
+
+            $table->text('description')->nullable();
             
             $table->timestamps();
 

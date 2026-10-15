@@ -4,7 +4,6 @@ namespace App\Filament\Pages;
 
 use App\Livewire\AccountTableWidget;
 use App\Models\Account;
-use Filament\Actions\ExportAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
@@ -30,12 +29,12 @@ class ManageAccounts extends TreePage
     public static function getAccountFormSchema(): array
     {
         return [
-            TextInput::make('code')
+            TextInput::make('account_code')
                 ->label('Kode Akun')
                 ->required()
                 ->maxLength(50),
 
-            TextInput::make('name')
+            TextInput::make('account_name')
                 ->label('Nama Akun')
                 ->required()
                 ->maxLength(255),
@@ -49,6 +48,10 @@ class ManageAccounts extends TreePage
                     ->inline()
                     ->required()
                     ->default('debit'),
+            
+            TextInput::make('description')
+                ->label('Deskripsi')
+                ->nullable(),
             
             TextInput::make('order')
                 ->label('Urutan Tampilan')
@@ -95,7 +98,7 @@ class ManageAccounts extends TreePage
             return '';
         }
 
-        $title = "{$record->code} - {$record->name}";
+        $title = "{$record->account_code} - {$record->account_name}";
 
         // Jika tidak aktif, tambahkan keterangan status di judulnya
         if (!$record->is_active) {

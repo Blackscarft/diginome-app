@@ -15,11 +15,12 @@ class Account extends Model
     protected $fillable = [
         'parent_id',
         'order',
-        'code',
-        'name',
+        'account_code',
+        'account_name',
         'normal_balance',
         'is_postable',
         'is_active',
+        'description'
     ];
 
     protected $casts = [
