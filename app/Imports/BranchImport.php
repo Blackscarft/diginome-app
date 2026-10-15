@@ -48,7 +48,7 @@ class BranchImport implements
         $row = $excelRow->toArray();
 
         $validator = Validator::make($row, [
-            'kode_cabang'       => ['required', 'string'],
+            'kode_cabang'       => ['required', 'string', 'unique:branches,branch_code'],
             'nama_cabang'       => ['required', 'string'],
             'deskripsi'         => ['nullable', 'string'],
             'parent_id'         => ['required', 'numeric'],
