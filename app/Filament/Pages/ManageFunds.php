@@ -138,16 +138,20 @@ class ManageFunds extends TreePage
     {
         return [
             Select::make('parent_id')
-                    ->default(-1)
-                    ->label('Parent Akun')
-                    ->relationship(
-                        name: 'parent',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->rootFunds()
-                    )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->fund_code} - {$record->fund_name} - urutan: {$record->order}")
-                    ->searchable(['fund_code', 'fund_name'])
-                    ->nullable(),
+                ->label('Parent Akun')
+                ->options(
+                    fn () => ['-1' => '- Root -'] +
+                        Fund::query()
+                            ->rootFunds()
+                            ->get()
+                            ->mapWithKeys(fn ($record) => [
+                                $record->id => "{$record->fund_code} - {$record->fund_name} - urutan: {$record->order}",
+                            ])
+                            ->all()
+                )
+                ->default('-1')
+                ->searchable()
+                ->required(),
                     
             TextInput::make('fund_code')
                 ->label('Kode Fund')

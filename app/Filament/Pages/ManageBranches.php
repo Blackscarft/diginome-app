@@ -138,16 +138,20 @@ class ManageBranches extends TreePage
     {
         return [
             Select::make('parent_id')
-                    ->default(-1)
-                    ->label('Parent Akun')
-                    ->relationship(
-                        name: 'parent',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->rootBranches()
-                    )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->branch_code} - {$record->branch_name} - urutan: {$record->order}")
-                    ->searchable(['branch_code', 'branch_name'])
-                    ->nullable(),
+                ->label('Parent Akun')
+                ->options(
+                    fn () => ['-1' => '- Root -'] +
+                        Branch::query()
+                            ->rootBranches()
+                            ->get()
+                            ->mapWithKeys(fn ($record) => [
+                                $record->id => "{$record->branch_code} - {$record->branch_name} - urutan: {$record->order}",
+                            ])
+                            ->all()
+                )
+                ->default('-1')
+                ->searchable()
+                ->required(),
 
             TextInput::make('branch_code')
                 ->label('Kode Cabang')

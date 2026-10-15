@@ -29,6 +29,22 @@ class ManageAccounts extends TreePage
     public static function getAccountFormSchema(): array
     {
         return [
+            Select::make('parent_id')
+                ->label('Parent Akun')
+                ->options(
+                    fn () => ['-1' => '- Root -'] +
+                        Account::query()
+                            ->rootAccounts()
+                            ->get()
+                            ->mapWithKeys(fn ($record) => [
+                                $record->id => "{$record->account_code} - {$record-> account_name} - urutan: {$record->order}",
+                            ])
+                            ->all()
+                )
+                ->default('-1')
+                ->searchable()
+                ->required(),
+
             TextInput::make('account_code')
                 ->label('Kode Akun')
                 ->required()
@@ -58,17 +74,6 @@ class ManageAccounts extends TreePage
                 ->numeric()
                 ->default(0)
                 ->required(),
-            
-            Select::make('parent_id')
-                    ->label('Parent Akun')
-                    ->relationship(
-                        name: 'parent',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->rootAccounts()
-                    )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->code} - {$record->name} - urutan: {$record->order}")
-                    ->searchable(['code', 'name'])
-                    ->nullable(),
             
             ToggleButtons::make('is_postable')
                 ->label('Dapat Diposting?')
@@ -115,9 +120,9 @@ class ManageAccounts extends TreePage
     protected function getActions(): array
     {
         return [
-            $this->getCreateAction(),
-            // SAMPLE CODE, CAN DELETE
-            //\Filament\Pages\Actions\Action::make('sampleAction'),
+            $this->getCreateAction()
+                ->icon('heroicon-o-plus')
+                ->color('primary'),
         ];
     }
 
