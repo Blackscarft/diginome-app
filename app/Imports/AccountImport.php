@@ -154,7 +154,7 @@ class AccountImport implements
             ->title(
                 $failedCount > 0
                     ? 'Import Selesai dengan Catatan'
-                    : 'Import Akun Bank Berhasil'
+                    : 'Import Akun Berhasil'
             )
             ->body(
                 "File {$importRecord->file_name} telah selesai diproses ({$importRecord->successful_rows} berhasil, {$failedCount} gagal)."
@@ -178,7 +178,7 @@ class AccountImport implements
 
         if ($user = User::find($this->userId)) {
             Notification::make()
-                ->title('Import Akun Bank Gagal Total')
+                ->title('Import Akun Gagal Total')
                 ->body(
                     "Terjadi kesalahan sistem saat memproses file {$importRecord->file_name}: {$event->getException()->getMessage()}"
                 )

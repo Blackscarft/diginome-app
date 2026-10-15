@@ -24,7 +24,7 @@
         <x-filament::input
             type="search"
             wire:model.live.debounce.300ms="search"
-            placeholder="Cari kode atau nama cabang..."
+            placeholder="Cari kode atau nama..."
         />
     </x-filament::input.wrapper>
 </div>

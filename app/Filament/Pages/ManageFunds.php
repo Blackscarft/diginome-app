@@ -2,42 +2,42 @@
 
 namespace App\Filament\Pages;
 
-use App\Exports\BranchTemplateExport;
-use App\Filament\Exports\BranchExporter;
-use App\Imports\BranchImport;
-use App\Models\Branch;
-use Filament\Actions\ExportAction;
+use App\Exports\FundTemplateExport;
+use App\Filament\Exports\FundExporter;
+use App\Imports\FundImport;
+use App\Models\Fund;
 use Filament\Actions\Action;
+use Filament\Actions\ExportAction;
+use Filament\Forms\Components\FileUpload;
+use SolutionForest\FilamentTree\Pages\TreePage;
+use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Contracts\View\View;
 use Filament\Forms\Components\Select;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Infolists\Components\TextEntry;
-use Illuminate\Database\Eloquent\Builder; 
-use SolutionForest\FilamentTree\Pages\TreePage;
-use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 use Maatwebsite\Excel\Facades\Excel;
-use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Actions\Imports\Models\Import;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
 
-class ManageBranch extends TreePage
+class ManageFunds extends TreePage
 {
-    protected static string $model = Branch::class;
+    protected static string $model = Fund::class;
 
     protected static string|UnitEnum|null $navigationGroup = 'Master';
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
 
-    protected static ?string $navigationLabel = 'Branch';
+    protected static ?string $navigationLabel = 'Funds';
 
-    protected static ?string $title = 'Master Cabang';
+    protected static ?string $title = 'Master Funds';
 
     // protected ?string $subheading = 'Kelola hierarki dan data cabang.';
 
-    protected static int $maxDepth = 3;
+    protected static int $maxDepth = 2;
 
     public ?string $search = '';
 
@@ -49,11 +49,11 @@ class ManageBranch extends TreePage
     protected function getActions(): array
     {
         return [
-            Action::make('ImportBranches')
+            Action::make('ImportFunds')
                 ->label('Import')
                 ->icon('heroicon-o-arrow-up-tray')
                 ->color('info')
-                ->modalHeading('Import Branches')
+                ->modalHeading('Import Funds')
                 ->modalDescription(
                     'Upload file Excel (.xlsx) yang berisi data cabang. Pastikan format kolom sesuai dengan template yang disediakan.'
                 )
@@ -63,8 +63,8 @@ class ManageBranch extends TreePage
                         ->icon('heroicon-o-arrow-down-tray')
                         ->color('warning')
                         ->action(fn () => Excel::download(
-                            new BranchTemplateExport, 
-                            'template_import_branches.xlsx'
+                            new FundTemplateExport, 
+                            'template_import_funds.xlsx'
                         )),
                 ])
                 ->schema([
@@ -76,9 +76,9 @@ class ManageBranch extends TreePage
                             'application/vnd.ms-excel',
                         ])
                         ->storeFiles(true)
-                        ->directory('imports/branches')
+                        ->directory('imports/funds')
                         ->getUploadedFileNameForStorageUsing(
-                            fn ($file) => 'Branch_' . now()->format('Ymd_His') . '_' . $file->getClientOriginalName()
+                            fn ($file) => 'Funds_' . now()->format('Ymd_His') . '_' . $file->getClientOriginalName()
                         )
                         ->required()
                         ->maxSize(1024), // 1 MB
@@ -95,7 +95,7 @@ class ManageBranch extends TreePage
                     // 3. Simpan data ke Tabel Imports
                     $importRecord = Import::create([
                         'user_id' => Auth::id(),
-                        'importer' => BranchImport::class,
+                        'importer' => FundImport::class,
                         'file_name' => $fileName,
                         'file_path' => $storedFilePath,
                         'total_rows' => 0,
@@ -105,7 +105,7 @@ class ManageBranch extends TreePage
 
                     // 4. Masukkan proses import ke Queue (Background)
                     Excel::queueImport(
-                        new BranchImport($importRecord->id, Auth::id()), 
+                        new FundImport($importRecord->id, Auth::id()), 
                         $storedFilePath, 
                         'local' // Disk penyimpanan Laravel (default: storage/app)
                     );
@@ -120,9 +120,9 @@ class ManageBranch extends TreePage
                 }),
 
             ExportAction::make()
-                ->exporter(BranchExporter::class)
+                ->exporter(FundExporter::class)
                 ->label('Export')
-                ->icon('heroicon-o-document-arrow-down')
+                ->icon('heroicon-o-arrow-down-tray')
                 ->color('success')
                 ->requiresConfirmation()
                 ->modalHeading('Export'),
@@ -130,7 +130,7 @@ class ManageBranch extends TreePage
             $this->getCreateAction()
                 ->icon('heroicon-o-plus')
                 ->color('primary')
-                ->modalHeading('Tambah'),
+                ->modalHeading('New Fund'),
         ];
     }
 
@@ -143,19 +143,19 @@ class ManageBranch extends TreePage
                     ->relationship(
                         name: 'parent',
                         titleAttribute: 'name',
-                        modifyQueryUsing: fn (Builder $query) => $query->rootBranches()
+                        modifyQueryUsing: fn (Builder $query) => $query->rootFunds()
                     )
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->branch_code} - {$record->branch_name} - urutan: {$record->order}")
-                    ->searchable(['branch_code', 'branch_name'])
+                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "{$record->fund_code} - {$record->fund_name} - urutan: {$record->order}")
+                    ->searchable(['fund_code', 'fund_name'])
                     ->nullable(),
-
-            TextInput::make('branch_code')
-                ->label('Kode Cabang')
+                    
+            TextInput::make('fund_code')
+                ->label('Kode Fund')
                 ->required()
                 ->maxLength(50),
 
-            TextInput::make('branch_name')
-                ->label('Nama Cabang')
+            TextInput::make('fund_name')
+                ->label('Nama Fund')
                 ->required()
                 ->maxLength(255),
 
@@ -175,34 +175,16 @@ class ManageBranch extends TreePage
                     ->inline()
                     ->required()
                     ->default(true),
-            
-            
         ];
     }
 
     public function getHeader(): View
     {
-        return view('filament.widgets.branch-search', [
+        return view('filament.widgets.tree-header-with-search', [
             'heading' => $this->getTitle(),
             'subheading' => $this->getSubheading(),
             'breadcrumbs' => $this->getBreadcrumbs(),
         ]);
-    }
-
-
-    public function getTreeRecordTitle(?\Illuminate\Database\Eloquent\Model $record = null): string
-    {
-        if (!$record) {
-            return '';
-        }
-
-        $title = "{$record->branch_code} - {$record->branch_name}";
-
-        // Jika tidak aktif, tambahkan keterangan status di judulnya
-        if (!$record->is_active) {
-            $title = "🚫 " . $title;
-        }
-        return (string) $title;
     }
 
     protected function getTreeQuery(): Builder
@@ -212,15 +194,25 @@ class ManageBranch extends TreePage
                 $search = trim($this->search);
 
                 $query->where(function (Builder $query) use ($search) {
-                    $query->where('branch_code', 'like', "%{$search}%")
-                        ->orWhere('branch_name', 'like', "%{$search}%");
+                    $query->where('fund_code', 'like', "%{$search}%")
+                        ->orWhere('fund_name', 'like', "%{$search}%");
                 });
             });
     }
 
-    public function updatedSearch(): void
+    public function getTreeRecordTitle(?\Illuminate\Database\Eloquent\Model $record = null): string
     {
-        $this->records = null;
+        if (!$record) {
+            return '';
+        }
+
+        $title = "{$record->fund_code} - {$record->fund_name}";
+
+        // Jika tidak aktif, tambahkan keterangan status di judulnya
+        if (!$record->is_active) {
+            $title = "🚫 " . $title;
+        }
+        return (string) $title;
     }
 
     protected function hasDeleteAction(): bool
@@ -241,14 +233,14 @@ class ManageBranch extends TreePage
     protected function getViewFormSchema(): array
     {
         return [
-            TextEntry::make('branch_code')
-                ->label('Kode Cabang'),
+            TextEntry::make('fund_code')
+                ->label('Kode Fund'),
 
-            TextEntry::make('branch_name')
-                ->label('Nama Cabang'),
+            TextEntry::make('fund_name')
+                ->label('Nama Fund'),
 
-            TextEntry::make('parent.branch_name')
-                ->label('Parent Cabang')
+            TextEntry::make('parent.fund_name')
+                ->label('Parent Fund')
                 ->placeholder('-'),
 
             TextEntry::make('description')
@@ -268,9 +260,7 @@ class ManageBranch extends TreePage
 
     protected function getHeaderWidgets(): array
     {
-        return [
-            // BranchSearch::class,
-        ];
+        return [];
     }
 
     protected function getFooterWidgets(): array

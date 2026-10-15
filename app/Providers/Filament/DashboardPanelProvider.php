@@ -3,8 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\ManageAccounts;
-use App\Filament\Pages\ManageBranch;
+use App\Filament\Pages\ManageBranches;
 use App\Filament\Pages\ManageExports;
+use App\Filament\Pages\ManageFunds;
 use App\Filament\Widgets\QueueWorkerStatusWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -55,7 +56,8 @@ class DashboardPanelProvider extends PanelProvider
                 Dashboard::class,
                 ManageAccounts::class,
                 ManageExports::class,
-                ManageBranch::class,
+                ManageBranches::class,
+                ManageFunds::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([

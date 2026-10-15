@@ -152,7 +152,7 @@ class BranchImport implements
             ->title(
                 $failedCount > 0
                     ? 'Import Selesai dengan Catatan'
-                    : 'Import Akun Bank Berhasil'
+                    : 'Import Cabang Berhasil'
             )
             ->body(
                 "File {$importRecord->file_name} telah selesai diproses ({$importRecord->successful_rows} berhasil, {$failedCount} gagal)."
@@ -176,7 +176,7 @@ class BranchImport implements
 
         if ($user = User::find($this->userId)) {
             Notification::make()
-                ->title('Import Akun Bank Gagal Total')
+                ->title('Import Cabang Gagal Total')
                 ->body(
                     "Terjadi kesalahan sistem saat memproses file {$importRecord->file_name}: {$event->getException()->getMessage()}"
                 )
