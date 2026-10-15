@@ -47,7 +47,16 @@ class AccountTableWidget extends TableWidget
                 
                 IconColumn::make('is_postable')
                     ->label('Dapat Posting?')
-                    ->boolean()
+                    ->boolean(),
+                
+                TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Tidak Aktif')
+                    ->color(fn (string $state): string => match ($state) {
+                        '1' => 'success',
+                        default => 'danger',
+                    })
             ])
             ->filters([
                 //

@@ -73,6 +73,13 @@ class ManageAccounts extends TreePage
                 ->inline()
                 ->required()
                 ->default(false),
+
+            ToggleButtons::make('is_active')
+                ->label('Status ?')
+                ->boolean('Aktif', 'Non-Aktif')
+                ->inline()
+                ->required()
+                ->default(false),
         ];
     }
 
@@ -84,16 +91,22 @@ class ManageAccounts extends TreePage
     // Kustomisasi teks yang tampil pada setiap node di tree
     public function getTreeRecordTitle(?\Illuminate\Database\Eloquent\Model $record = null): string
     {
-        if (!$record) return '';
-        return "{$record->code} - {$record->name}";
+        if (!$record) {
+            return '';
+        }
+
+        $title = "{$record->code} - {$record->name}";
+
+        // Jika tidak aktif, tambahkan keterangan status di judulnya
+        if (!$record->is_active) {
+            $title = "🚫 " . $title;
+        }
+        return (string) $title;
     }
 
     protected function getTreeToolbarActions(): array
     {
-        return [
-            ExportAction::make('Export Akun')
-                ->label('Export Akun')
-        ];
+        return [];
     }
 
     protected function getActions(): array
@@ -112,7 +125,7 @@ class ManageAccounts extends TreePage
 
     protected function hasDeleteAction(): bool
     {
-        return true;
+        return false;
     }
 
     protected function hasEditAction(): bool
