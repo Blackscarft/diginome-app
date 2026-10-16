@@ -52,7 +52,7 @@ class BankAccountsImport implements
             'nama_bank'     => ['required', 'string'],
             'rekening'      => ['required', 'string'],
             'atas_nama'     => ['required', 'string'],
-            'saldo_initial'    => ['required', 'numeric'],
+            'saldo_initial' => ['required', 'numeric'],
             'status_aktif'  => ['required', 'boolean', 'in:1,0'],
             'catatan'       => ['nullable', 'string'],
         ]);
