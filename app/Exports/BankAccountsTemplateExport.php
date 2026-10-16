@@ -42,7 +42,7 @@ class BankAccountsTemplateExport implements FromArray, WithHeadings, WithStyles,
             'nama_bank',
             'rekening',
             'atas_nama',
-            'saldo_awal',
+            'saldo_initial',
             'status_aktif',
             'catatan'
         ];
@@ -101,7 +101,7 @@ class BankAccountsTemplateExport implements FromArray, WithHeadings, WithStyles,
             // 6. Pesan panduan untuk saldo_awal (Kolom F) - Tidak boleh kosong
             $validationParent = $sheet->getCell("F{$row}")->getDataValidation();
             $validationParent->setShowInputMessage(true);
-            $validationParent->setPromptTitle('Saldo Awal');
+            $validationParent->setPromptTitle('Saldo Initial');
             $validationParent->setPrompt('Tidak boleh kosong.');
 
             //  7. Terapkan dropdown pada kolom status_aktif (Kolom G)

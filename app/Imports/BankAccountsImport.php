@@ -52,7 +52,7 @@ class BankAccountsImport implements
             'nama_bank'     => ['required', 'string'],
             'rekening'      => ['required', 'string'],
             'atas_nama'     => ['required', 'string'],
-            'saldo_awal'    => ['required', 'numeric'],
+            'saldo_initial'    => ['required', 'numeric'],
             'status_aktif'  => ['required', 'boolean', 'in:1,0'],
             'catatan'       => ['nullable', 'string'],
         ]);
@@ -81,7 +81,7 @@ class BankAccountsImport implements
                     'bank_name'         => (string) $row['nama_bank'],
                     'account_number'    => (string) $row['rekening'] ?? null,
                     'account_holder'    => (string) $row['atas_nama'],
-                    'initial_balance'   => $row['saldo_awal'] ?? 0,
+                    'initial_balance'   => $row['saldo_initial'] ?? 0,
                     'notes'             => (string) $row['catatan'] ?? null,
                     'is_active'         => (bool) $row['status_aktif'],
                 ]);

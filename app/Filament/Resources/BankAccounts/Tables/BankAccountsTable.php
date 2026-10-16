@@ -65,7 +65,7 @@ class BankAccountsTable
                     ->formatStateUsing(fn ($state) => $state ? 'Aktif' : 'Tidak Aktif'),
 
                 TextColumn::make('initial_balance')
-                    ->label('Saldo Awal')
+                    ->label('Saldo Initial')
                     ->money('idr')
                     ->toggleable(isToggledHiddenByDefault: true),
 

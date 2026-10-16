@@ -27,6 +27,8 @@ class BankAccountExporter extends Exporter
                 ->label('No. Rekening'),
             ExportColumn::make('account_holder')
                 ->label('Atas Nama'),
+            ExportColumn::make('initial_balance')
+                ->label('saldo initial'),
             ExportColumn::make('notes')
                 ->label('Catatan'),
             ExportColumn::make('is_active')
