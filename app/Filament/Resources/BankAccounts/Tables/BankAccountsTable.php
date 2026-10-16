@@ -6,7 +6,6 @@ use App\Exports\BankAccountsTemplateExport;
 use App\Filament\Exports\BankAccountExporter;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ExportAction;
@@ -29,13 +28,16 @@ class BankAccountsTable
             ->heading('Daftar Akun Bank')
             ->description('Kelola data akun bank perusahaan di sini.') 
             ->columns([
-                TextColumn::make('account.code')
+                TextColumn::make('account.account_code')
                     ->label('Kode Akun')
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('bank_code')
                     ->label('Kode Bank')
                     ->badge()
+                    ->icon('heroicon-o-clipboard-document')
+                    ->copyable()
+                    ->copyMessage('Kode bank berhasil disalin')
                     ->searchable(),
                 
                 TextColumn::make('bank_name')
@@ -159,9 +161,9 @@ class BankAccountsTable
                     ->falseLabel('Tidak Aktif'),
             ])
             ->defaultGroup(
-                Group::make('account.name') // Sesuai nama relasi & atribut nama di model CoA
+                Group::make('account.account_name') // Sesuai nama relasi & atribut nama di model CoA
                     ->label('Akun CoA')
-                    ->getTitleFromRecordUsing(fn ($record) => "{$record->account?->code} - {$record->account?->name}")
+                    ->getTitleFromRecordUsing(fn ($record) => "{$record->account?->account_code} - {$record->account?->account_name}")
                     ->collapsible() // Mengizinkan grup untuk di-collapse (buka-tutup)
             )
             ->recordActions([

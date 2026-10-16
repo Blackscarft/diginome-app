@@ -47,13 +47,14 @@ class BankAccountsImport implements
         $row = $excelRow->toArray();
 
         $validator = Validator::make($row, [
-            'kode_akun' => ['required', 'string', 'exists:accounts,code'],
-            'kode_bank' => ['required', 'string'],
-            'nama_bank'   => ['required', 'string'],
-            'no_rekening' => ['nullable', 'string'],
+            'kode_akun'     => ['required', 'string','exists:accounts,account_code'],
+            'kode_bank'     => ['required', 'string', 'unique:bank_accounts,bank_code'],
+            'nama_bank'     => ['required', 'string'],
+            'rekening'      => ['required', 'string'],
             'atas_nama'     => ['required', 'string'],
-            'catatan'    => ['nullable', 'string'],
-            'saldo_awal'     => ['required', 'numeric'],
+            'saldo_awal'    => ['required', 'numeric'],
+            'status_aktif'  => ['required', 'boolean', 'in:1,0'],
+            'catatan'       => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -70,7 +71,7 @@ class BankAccountsImport implements
             return; // HENTIKAN proses untuk baris ini, lanjut ke baris berikutnya
         }
 
-        $accountId = Account::where('code', $row['kode_akun'])->value('id');
+        $accountId = Account::where('account_code', $row['kode_akun'])->value('id');
 
         try {
             DB::transaction(function () use ($row, $accountId) {
@@ -78,11 +79,11 @@ class BankAccountsImport implements
                     'account_id'        => $accountId,
                     'bank_code'         => (string) $row['kode_bank'],
                     'bank_name'         => (string) $row['nama_bank'],
-                    'account_number'    => (string) $row['no_rekening'] ?? null,
+                    'account_number'    => (string) $row['rekening'] ?? null,
                     'account_holder'    => (string) $row['atas_nama'],
                     'initial_balance'   => $row['saldo_awal'] ?? 0,
-                    'notes'             => $row['catatan'] ?? null,
-                    'is_active'         => true,
+                    'notes'             => (string) $row['catatan'] ?? null,
+                    'is_active'         => (bool) $row['status_aktif'],
                 ]);
 
                 DB::table('imports')

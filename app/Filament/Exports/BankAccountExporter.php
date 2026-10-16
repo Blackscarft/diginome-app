@@ -15,9 +15,9 @@ class BankAccountExporter extends Exporter
     public static function getColumns(): array
     {
         return [
-            ExportColumn::make('account.code')
+            ExportColumn::make('account.account_code')
                 ->label('Kode Akun'),
-            ExportColumn::make('account.name')
+            ExportColumn::make('account.account_name')
                 ->label('Nama Akun'),
             ExportColumn::make('bank_code')
                 ->label('Kode Bank'),
@@ -30,7 +30,8 @@ class BankAccountExporter extends Exporter
             ExportColumn::make('notes')
                 ->label('Catatan'),
             ExportColumn::make('is_active')
-                ->label('Status'),
+                ->label('Status')
+                ->formatStateUsing(fn ($state) => $state ? true : false),
             ExportColumn::make('created_at'),
             ExportColumn::make('updated_at')
         ];
