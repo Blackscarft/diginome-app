@@ -16,6 +16,10 @@ class TransactionType extends Model
         'is_active'
     ];
 
+    protected $casts = [
+        'is_active' => 'boolean'
+    ];
+
     /**
      * Relasi ke model account_transactions
      */
