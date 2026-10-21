@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class AccountTransactions extends Model
+class AccountTransaction extends Model
 {
     use SoftDeletes;
     
@@ -16,7 +16,7 @@ class AccountTransactions extends Model
     protected $fillable  = [
         'accountable_type',
         'accountable_id',
-        'transaction_type_id',
+        'transaction_types',
         'debit',
         'credit',
         'transaction_date',
@@ -25,6 +25,16 @@ class AccountTransactions extends Model
         'reference',
         'fee_amount',
         'is_matched',
+    ];
+
+    protected $casts = [
+        'is_matched' => 'boolean',
+        'transaction_date' => 'date',
+        'transaction_types' => 'integer',
+        'debit' => 'decimal:2',
+        'credit' => 'decimal:2',
+        'fee_amount' => 'decimal:2',
+        'transaction_time' => 'datetime:H:i:s',
     ];
 
     /**
@@ -41,6 +51,6 @@ class AccountTransactions extends Model
     public function transactionType(): BelongsTo
     {
         return $this->belongsTo(TransactionType::class, 'transaction_types');
-    }
+    }    
 
 }

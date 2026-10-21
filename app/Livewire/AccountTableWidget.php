@@ -28,6 +28,7 @@ class AccountTableWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
+            ->deferLoading()
             ->query(fn (): Builder => Account::query())
             ->columns([
                 TextColumn::make('account_code')

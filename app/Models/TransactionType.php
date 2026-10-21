@@ -25,6 +25,6 @@ class TransactionType extends Model
      */
     public function accountTransactions()
     {
-        return $this->hasMany(AccountTransactions::class);
+        return $this->hasMany(AccountTransaction::class);
     }
 }

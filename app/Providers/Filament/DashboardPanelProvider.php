@@ -26,6 +26,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Support\HtmlString;
 use App\Http\Middleware\CheckUserStatus;
+use Filament\Navigation\NavigationGroup;
 
 class DashboardPanelProvider extends PanelProvider
 {
@@ -39,9 +40,10 @@ class DashboardPanelProvider extends PanelProvider
             ->profile()
             ->maxContentWidth('full')
             ->navigationGroups([
-                'Bank',
-                'Master',
-                'Pengaturan',
+                NavigationGroup::make('Kas & Bank'),
+                NavigationGroup::make('Bank'),
+                NavigationGroup::make('Master'),
+                NavigationGroup::make('Pengaturan'),
             ])
             ->databaseNotifications()
             ->plugins([
