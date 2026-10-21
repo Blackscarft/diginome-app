@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources\AccountTransactions\Tables;
 
+use App\Filament\Exports\AccountTransactionExporter;
 use App\Models\BankAccount;
 use App\Models\CashAccount;
 use App\Models\FintechAccount;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ExportAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -26,6 +28,8 @@ class AccountTransactionsTable
         return $table
             ->deferLoading()
             ->defaultSort('transaction_date', 'desc')
+            ->heading('Daftar Transaksi Akun')
+            ->description('Kelola daftar transaksi akun') 
             ->columns([
                 TextColumn::make('transactionType.type_name')
                     ->label('Tipe')
@@ -116,6 +120,37 @@ class AccountTransactionsTable
                         'danger' => false,
                     ])
                     ->formatStateUsing(fn ($state) => $state ? 'matched' : 'unmatched'),
+            ])
+            ->headerActions([
+                ExportAction::make('ExportAccountTransaction')
+                        ->label('Export')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->color('success')                        
+                        ->exporter(AccountTransactionExporter::class)
+                        ->modifyQueryUsing(function (Builder $query, array $data) {
+                            return $query
+                                ->when(
+                                    $data['start_date'] ?? null,
+                                    fn (Builder $query, $date) =>
+                                        $query->whereDate('transaction_date', '>=', $date)
+                                )
+                                ->when(
+                                    $data['end_date'] ?? null,
+                                    fn (Builder $query, $date) =>
+                                        $query->whereDate('transaction_date', '<=', $date)
+                                )
+                                ->when(
+                                    $data['accountable_type'] ?? null,
+                                    fn (Builder $query, $type) =>
+                                        $query->where('accountable_type', $type)
+                                )
+                                ->when(
+                                    $data['accountable_id'] ?? null,
+                                    fn (Builder $query, $id) =>
+                                        $query->where('accountable_id', $id)
+                                );
+                        }),
+
             ])
             ->filters([
                 Filter::make('account')

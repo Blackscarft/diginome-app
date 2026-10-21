@@ -33,8 +33,7 @@ class AccountTransaction extends Model
         'transaction_types' => 'integer',
         'debit' => 'decimal:2',
         'credit' => 'decimal:2',
-        'fee_amount' => 'decimal:2',
-        'transaction_time' => 'datetime:H:i:s',
+        'fee_amount' => 'decimal:2'
     ];
 
     /**
