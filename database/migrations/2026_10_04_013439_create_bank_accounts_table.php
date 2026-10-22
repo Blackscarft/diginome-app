@@ -20,7 +20,7 @@ return new class extends Migration
 
             $table->string('bank_code')->unique()->index();
             $table->string('bank_name');
-            $table->string('account_number')->nullable();
+            $table->string('account_number')->unique()->index();
             $table->string('account_holder');
 
             // Saldo Awal saat pertama kali aplikasi Go-Live

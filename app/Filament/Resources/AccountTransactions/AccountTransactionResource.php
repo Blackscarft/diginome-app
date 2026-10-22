@@ -6,6 +6,7 @@ use App\Filament\Resources\AccountTransactions\Pages\CreateAccountTransaction;
 use App\Filament\Resources\AccountTransactions\Pages\EditAccountTransaction;
 use App\Filament\Resources\AccountTransactions\Pages\ListAccountTransactions;
 use App\Filament\Resources\AccountTransactions\Pages\ViewAccountTransaction;
+use App\Filament\Resources\AccountTransactions\Pages\ImportAccountTransactions;
 use App\Filament\Resources\AccountTransactions\Schemas\AccountTransactionForm;
 use App\Filament\Resources\AccountTransactions\Schemas\AccountTransactionInfolist;
 use App\Filament\Resources\AccountTransactions\Tables\AccountTransactionsTable;
@@ -54,8 +55,10 @@ class AccountTransactionResource extends Resource
         return [
             'index' => ListAccountTransactions::route('/'),
             'create' => CreateAccountTransaction::route('/create'),
+            'import' => ImportAccountTransactions::route('/import'),
+            
             'view' => ViewAccountTransaction::route('/{record}'),
             'edit' => EditAccountTransaction::route('/{record}/edit'),
-        ];
-    }
+            ];
+            }
 }

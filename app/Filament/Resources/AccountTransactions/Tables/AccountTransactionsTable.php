@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\AccountTransactions\Tables;
 
 use App\Filament\Exports\AccountTransactionExporter;
+use App\Filament\Resources\AccountTransactions\AccountTransactionResource;
 use App\Models\BankAccount;
 use App\Models\CashAccount;
 use App\Models\FintechAccount;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -122,6 +124,12 @@ class AccountTransactionsTable
                     ->formatStateUsing(fn ($state) => $state ? 'matched' : 'unmatched'),
             ])
             ->headerActions([
+                Action::make('ImportAccountTransaction')
+                    ->label('Import')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('info')
+                    ->url(AccountTransactionResource::getUrl('import')),
+
                 ExportAction::make('ExportAccountTransaction')
                         ->label('Export')
                         ->icon('heroicon-o-arrow-down-tray')

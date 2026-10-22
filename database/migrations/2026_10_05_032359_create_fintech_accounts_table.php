@@ -24,7 +24,7 @@ return new class extends Migration
 
             $table->string('fintech_account_code')->unique()->index();
             $table->string('fintech_account_name');
-            $table->string('merchant_id')->nullable();
+            $table->string('merchant_id')->unique()->index();
             $table->decimal('initial_balance', 15, 2)->default(0);
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
