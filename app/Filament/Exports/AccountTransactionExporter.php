@@ -161,7 +161,7 @@ class AccountTransactionExporter extends Exporter
                     \App\Models\FintechAccount::class => 'Fintech',
                     default => $state,
                 }),
-            ExportColumn::make('accountable_id')
+            ExportColumn::make('accountName')
                 ->label('Nama Akun')
                 ->state(function ($record) {
                     $account = $record->accountable;
@@ -183,7 +183,7 @@ class AccountTransactionExporter extends Exporter
                         default => '-',
                     };
                 }),
-            ExportColumn::make('accountable_id')
+            ExportColumn::make('accountNumber')
                 ->label('Rekening')
                 ->state(function ($record) {
                     $account = $record->accountable;
