@@ -32,6 +32,7 @@ class AccountTransactionsTable
             ->defaultSort('transaction_date', 'desc')
             ->heading('Daftar Transaksi Akun')
             ->description('Kelola daftar transaksi akun') 
+            ->filtersFormColumns(3)
             ->columns([
                 TextColumn::make('transactionType.type_name')
                     ->label('Tipe')

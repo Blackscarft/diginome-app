@@ -1,11 +1,20 @@
 <x-filament-panels::page>
     <form wire:submit="submit">
         {{ $this->form }}
-
-        {{-- <div class="mt-6 flex justify-end gap-x-4">
-            <x-filament::button type="submit" color="primary">
-                Proses Import
-            </x-filament::button>
-        </div> --}}
     </form>
+
+    {{ $this->summary }}
+
+    <x-filament::section>
+            <x-slot name="heading">
+                Preview Data Transaksi
+            </x-slot>
+
+            <x-slot name="description">
+                Menampilkan maksimal 100 dari {{ $totalRows }} baris.
+                Data belum disimpan ke database.
+            </x-slot>
+            {{ $this->table }}
+    </x-filament::section>
+
 </x-filament-panels::page>
