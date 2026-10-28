@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AccountTransactions\Pages;
 
 use App\Exports\AccountTransactionTemplateExport;
 use App\Filament\Resources\AccountTransactions\AccountTransactionResource;
+use App\Imports\AccountTransactionsImport;
 use App\Imports\PreviewAccountTransactionImport;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -29,13 +30,14 @@ use Illuminate\Support\Collection;
 
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Carbon\Carbon;
+use Filament\Actions\Imports\Models\Import;
 use Filament\Forms\Components\Select;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\View;
 use Filament\Support\Enums\FontWeight;
 use Filament\Support\Enums\TextSize;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 use Throwable;
 
 class ImportAccountTransactions extends Page Implements HasTable
@@ -45,6 +47,9 @@ class ImportAccountTransactions extends Page Implements HasTable
     protected static string $resource = AccountTransactionResource::class;
 
     protected string $view = 'filament.resources.account-transactions.pages.import-account-transactions';
+
+    // Variabel untuk menampung file
+    public ?TemporaryUploadedFile $file = null;
 
     // Variabel untuk menampung state form
     public ?array $data = [];
@@ -58,11 +63,6 @@ class ImportAccountTransactions extends Page Implements HasTable
     public function mount(): void
     {
         $this->form->fill();
-    }
-
-    public function submit()
-    {
-        $formData = $this->form->getState();
     }
 
     private function formatExcelDate(?String $value): ?string
@@ -104,9 +104,7 @@ class ImportAccountTransactions extends Page Implements HasTable
         }
     }
 
-    public function loadPreview(
-        ?TemporaryUploadedFile $file
-    ): void {
+    public function loadPreview(?TemporaryUploadedFile $file): void {
         $this->previewRows = [];
         $this->totalRows = 0;
 
@@ -197,123 +195,6 @@ class ImportAccountTransactions extends Page Implements HasTable
         }
     }
 
-    public function getImportSummary(): array
-    {
-        $rows = collect(
-            $this->allPreviewRows ?? $this->previewRows
-        );
-
-        return [
-            'total_transactions' => $this->totalRows,
-
-            'total_accounts' => $rows
-                ->pluck('account_number')
-                ->filter()
-                ->unique()
-                ->count(),
-
-            'total_debit' => $rows->sum(
-                fn ($row) => (float) ($row['debit'] ?? 0)
-            ),
-
-            'total_credit' => $rows->sum(
-                fn ($row) => (float) ($row['credit'] ?? 0)
-            ),
-
-            'total_fee' => $rows->sum(
-                fn ($row) => (float) ($row['fee_amount'] ?? 0)
-            ),
-
-            'date_from' => $rows
-                ->pluck('transaction_date')
-                ->filter()
-                ->min(),
-
-            'date_until' => $rows
-                ->pluck('transaction_date')
-                ->filter()
-                ->max(),
-        ];
-    }
-
-    public function form(Schema $schema): Schema
-    {
-        return $schema
-            ->columns(2)
-            ->components([
-                Section::make('importForm')
-                    ->heading('Import Account Transactions')
-                    ->description('Pilih file Excel untuk diimport.')
-                    ->afterHeader([
-                        Action::make('downloadTemplate')
-                            ->label('Download Template')
-                            ->icon('heroicon-o-arrow-down-tray')
-                            ->color('warning')
-                            ->action(fn () => Excel::download(
-                                new AccountTransactionTemplateExport, 
-                                'template_import_akun_transaksi.xlsx'
-                            )),
-                    ])
-                    ->schema([
-                        FileUpload::make('file_excel')
-                                    ->label('File Transaksi')
-                                    ->required()
-                                    ->acceptedFileTypes([
-                                        'application/vnd.ms-excel',
-                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                    ])
-                                    ->storeFiles(false)
-                                    // ->directory('imports/account_transactions')
-                                    // ->getUploadedFileNameForStorageUsing(
-                                    //     fn ($file) => 'Mutasi_' . now()->format('Ymd_His') . '_' . $file->getClientOriginalName()
-                                    // )
-                                    // ->live()
-                                    // ->afterStateUpdated(function (
-                                    //     ?TemporaryUploadedFile $state
-                                    // ): void {
-                                    //     $this->loadPreview($state);
-                                    // })
-                                    ->maxSize(10240)
-                                    ->afterStateUpdated(function ($state): void {
-                                        if (! $state) {
-                                            return;
-                                        }
-
-                                        Notification::make()
-                                            ->title('Upload selesai')
-                                            ->body('File Excel berhasil diunggah. Klik Preview Import untuk melanjutkan.')
-                                            ->success()
-                                            ->send();
-                                    })
-                                    ->helperText('Upload file Excel. Maksimal 10 MB.'),
-                    ])
-                    ->footerActions([
-                        Action::make('previewImport')
-                            ->label('Preview Import')
-                            ->color('success')
-                            ->disabled(fn () => empty($this->data['file_excel']))
-                            
-                            ->action(function (): void {
-                                $state = $this->form->getState();
-                                $file = $state['file_excel'] ?? null;
-
-                                if (!$file instanceof TemporaryUploadedFile) {
-                                    Notification::make()
-                                        ->title('File belum diupload')
-                                        ->body('Silakan upload file Excel terlebih dahulu.')
-                                        ->warning()
-                                        ->send();
-
-                                    return;
-                                }
-
-                                $this->loadPreview($file);
-                            }),
-                    ]),
-            ])
-            ->statePath('data');
-    }
-
     public function getFilteredPreviewRows(): Collection
     {
         $rows = collect($this->previewRows);
@@ -359,29 +240,6 @@ class ImportAccountTransactions extends Page Implements HasTable
             ->values();
     }
 
-    public function cancelImport(): void
-    {
-        // Bersihkan seluruh data preview
-        $this->previewRows = [];
-        $this->allPreviewRows = [];
-        $this->totalRows = 0;
-
-        // Reset filter tabel
-        $this->tableFilters = [];
-
-        // Bersihkan file yang diunggah dari state form
-        $this->form->fill([
-            'file_excel' => null,
-        ]);
-
-        // Beri notifikasi
-        Notification::make()
-            ->title('Import dibatalkan')
-            ->body('File, preview transaksi, filter, dan ringkasan berhasil dibersihkan.')
-            ->success()
-            ->send();
-    }
-
     public function table(Table $table): Table
     {
         return $table
@@ -397,7 +255,7 @@ class ImportAccountTransactions extends Page Implements HasTable
                             ->label('Import')
                             ->color('info')
                             ->visible(fn () => ! empty($this->previewRows))
-                            ->action('submit'), // Memanggil method submit() di file PHP Page Anda
+                            ->action('submitImport'), // Memanggil method submit() di file PHP Page Anda
 
                 ])
                 ->columns([
@@ -483,8 +341,215 @@ class ImportAccountTransactions extends Page Implements HasTable
                 ]);
     }
 
+    public function getImportSummary(): array
+    {
+        $rows = collect(
+            $this->allPreviewRows ?? $this->previewRows
+        );
+
+        return [
+            'total_transactions' => $this->totalRows,
+
+            'total_accounts' => $rows
+                ->pluck('account_number')
+                ->filter()
+                ->unique()
+                ->count(),
+
+            'total_debit' => $rows->sum(
+                fn ($row) => (float) ($row['debit'] ?? 0)
+            ),
+
+            'total_credit' => $rows->sum(
+                fn ($row) => (float) ($row['credit'] ?? 0)
+            ),
+
+            'total_fee' => $rows->sum(
+                fn ($row) => (float) ($row['fee_amount'] ?? 0)
+            ),
+
+            'date_from' => $rows
+                ->pluck('transaction_date')
+                ->filter()
+                ->min(),
+
+            'date_until' => $rows
+                ->pluck('transaction_date')
+                ->filter()
+                ->max(),
+        ];
+    }
+
+    public function submitImport(): void
+    {
+        try {
+            // Ambil data dari state form
+            $state = $this->form->getState();
+            $file = $state['file_excel'] ?? null;
     
+            if (! $file instanceof TemporaryUploadedFile) {
+                Notification::make()
+                    ->title('File Excel tidak ditemukan')
+                    ->body('Silakan upload ulang file Excel.')
+                    ->warning()
+                    ->send();
     
+                return;
+            }
+
+            $originalName = $file->getClientOriginalName();
+            $fileName = 'Akun_Transaksi_'. now()->format('Ymd_His'). '_'. $originalName;
+
+            // Simpan file ke penyimpanan lokal
+            $storedFilePath = $file->storeAs(
+                        'imports/account_transactions',
+                        $fileName,
+                        'local'
+                    );
+            
+            if (! $storedFilePath) {
+                throw new \RuntimeException('Gagal menyimpan file ke Storage.');
+            }
+
+            // Simpan data ke Tabel Imports untuk riwayat Import
+            $importRecord = Import::create([
+                'user_id' => Auth::id(),
+                'importer' => AccountTransactionsImport::class,
+                'file_name' => $fileName,
+                'file_path' => $storedFilePath,
+                'total_rows' => 0,
+                'successful_rows' => 0,
+                'processed_rows' => 0
+            ]);
+            
+            Excel::queueImport(
+                new AccountTransactionsImport($importRecord->id, Auth::id()), 
+                $storedFilePath, 
+                'local' // Disk penyimpanan Laravel (default: storage/app)
+            );
+
+            Notification::make()
+                ->title('Import Dimulai di Background')
+                ->body('File Anda sedang diproses di antrean server. Anda dapat melanjutkan pekerjaan lain.')
+                ->info()
+                ->send();
+
+            // Bersihkan seluruh data preview
+            $this->cancelImport(false);
+
+        } catch(Throwable $e) {
+            report($e);
+
+            Notification::make()
+                ->title('Import gagal')
+                ->body('Terjadi kesalahan saat import data.')
+                ->danger()
+                ->persistent()
+                ->send();
+        }
+    }
+
+    public function cancelImport(bool $confirmed = true): void
+    {
+        // Bersihkan seluruh data preview
+        $this->previewRows = [];
+        $this->allPreviewRows = [];
+        $this->totalRows = 0;
+
+        // Reset filter tabel
+        $this->tableFilters = [];
+
+        // Bersihkan file yang diunggah dari state form
+        $this->form->fill([
+            'file_excel' => null,
+        ]);
+
+        if($confirmed) {
+            Notification::make()
+                ->title('Import dibatalkan')
+                ->body('File, preview transaksi, filter, dan ringkasan berhasil dibersihkan.')
+                ->success()
+                ->send();
+        }
+    }
+    
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(2)
+            ->components([
+                Section::make('importForm')
+                    ->heading('Import Account Transactions')
+                    ->description('Pilih file Excel untuk diimport.')
+                    ->afterHeader([
+                        Action::make('downloadTemplate')
+                            ->label('Download Template')
+                            ->icon('heroicon-o-arrow-down-tray')
+                            ->color('warning')
+                            ->action(fn () => Excel::download(
+                                new AccountTransactionTemplateExport, 
+                                'template_import_akun_transaksi.xlsx'
+                            )),
+                    ])
+                    ->schema([
+                        FileUpload::make('file_excel')
+                                    ->label('File Transaksi')
+                                    ->required()
+                                    ->acceptedFileTypes([
+                                        'application/vnd.ms-excel',
+                                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                    ])
+                                    ->storeFiles(false)
+                                    // ->directory('imports/account_transactions')
+                                    // ->getUploadedFileNameForStorageUsing(
+                                    //     fn ($file) => 'Mutasi_' . now()->format('Ymd_His') . '_' . $file->getClientOriginalName()
+                                    // )
+                                    // ->live()
+                                    // ->afterStateUpdated(function (
+                                    //     ?TemporaryUploadedFile $state
+                                    // ): void {
+                                    //     $this->loadPreview($state);
+                                    // })
+                                    ->maxSize(10240)
+                                    ->afterStateUpdated(function ($state): void {
+                                        if (! $state) {
+                                            return;
+                                        }
+
+                                        Notification::make()
+                                            ->title('Upload selesai')
+                                            ->body('File Excel berhasil diunggah. Klik Preview Import untuk melanjutkan.')
+                                            ->success()
+                                            ->send();
+                                    })
+                                    ->helperText('Upload file Excel. Maksimal 10 MB.'),
+                    ])
+                    ->footerActions([
+                        Action::make('previewImport')
+                            ->label('Preview Import')
+                            ->color('success')
+                            ->disabled(fn () => empty($this->data['file_excel']))
+                            ->action(function (): void {
+                                $state = $this->form->getState();
+                                $file = $state['file_excel'] ?? null;
+
+                                if (!$file instanceof TemporaryUploadedFile) {
+                                    Notification::make()
+                                        ->title('File belum diupload')
+                                        ->body('Silakan upload file Excel terlebih dahulu.')
+                                        ->warning()
+                                        ->send();
+
+                                    return;
+                                }
+
+                                $this->loadPreview($file);
+                            }),
+                    ]),
+            ])
+            ->statePath('data');
+    }
+
     public function summary(Schema $schema): Schema
     {
         return $schema
@@ -594,7 +659,4 @@ class ImportAccountTransactions extends Page Implements HasTable
                     ]),
             ]);
     }
-
-
-
 }
