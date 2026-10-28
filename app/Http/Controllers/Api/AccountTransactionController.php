@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\BankMutation;
+use App\Models\AccountTransaction;
 use Illuminate\Http\Request;
 
 /**
- * @group Manajemen Mutasi Bank
+ * @group Manajemen Transaksi Akun
  * 
- * Endpoint untuk mengelola dan melihat data mutasi bank serta proses rekonsiliasi.
+ * Endpoint untuk mengelola dan melihat data transaksi akun serta proses rekonsiliasi.
  */
-class BankMutationController extends Controller
+class AccountTransactionController extends Controller
 {
 
     /**
@@ -22,6 +22,7 @@ class BankMutationController extends Controller
      * 
      * @queryParam is_matched string Status penyesuaian (true atau false). Example: false
      * @queryParam bank_code string Kode bank (contoh: 0001, 0002). Example: 0002
+     * @queryParam account_number string Nomor rekening bank. Example: 1234567890
      * @queryParam start_date string Tanggal awal transaksi dengan format YYYY-MM-DD. Example: 2026-01-01
      * @queryParam end_date string Tanggal akhir transaksi dengan format YYYY-MM-DD. Example: 2026-01-02
      * 
@@ -45,13 +46,13 @@ class BankMutationController extends Controller
      *       "bank_name": "a",
      *       "debit": "0.00",
      *       "credit": "100.00",
-     *       "transaction_date": "2026-08-01T00:00:00.000000Z",
+     *       "transaction_date": "2026-08-01",
      *       "transaction_time": null,
      *       "description": "test",
      *       "reference": "trx-12345",
      *       "is_matched": false,
-     *       "created_at": "2026-08-31T07:41:33.000000Z",
-     *       "updated_at": "2026-08-31T07:41:33.000000Z",
+     *       "created_at": "2026-08-31",
+     *       "updated_at": "2026-08-31",
      *       "deleted_at": null
      *       },
      *       {
@@ -63,13 +64,13 @@ class BankMutationController extends Controller
      *       "bank_name": "b",
      *       "debit": "100.00",
      *       "credit": "0.00",
-     *       "transaction_date": "2026-08-02T00:00:00.000000Z",
+     *       "transaction_date": "2026-08-02",
      *       "transaction_time": null,
      *       "description": "test1",
      *       "reference": "trx-12346",
      *       "is_matched": false,
-     *       "created_at": "2026-08-31T07:41:33.000000Z",
-     *       "updated_at": "2026-08-31T07:41:33.000000Z",
+     *       "created_at": "2026-08-31",
+     *       "updated_at": "2026-08-31",
      *       "deleted_at": null
      *       }
      *   ]
@@ -77,7 +78,7 @@ class BankMutationController extends Controller
      */
     public function index(Request $request)
     {
-        $query = BankMutation::where('is_matched', false);
+        $query = AccountTransaction::where('is_matched', false);
 
         // Filter berdasarkan status penyesuaian (matching) jika dikirim oleh client
         if ($request->filled('is_matched')) {
@@ -88,6 +89,11 @@ class BankMutationController extends Controller
         // Filter berdasarkan bank_code (jika dikirim oleh client)
         if ($request->filled('bank_code')) {
             $query->where('bank_code', $request->bank_code);
+        }
+
+        // Filter berdasarkan account_number (jika dikirim oleh client)
+        if ($request->filled('account_number')) {
+            $query->where('account_number', $request->account_number);
         }
 
         // Filter berdasarkan date range (transaction_date)
@@ -106,7 +112,14 @@ class BankMutationController extends Controller
         }
 
         // Sort berdasarkan tanggal transaksi (terbaru)
-        $mutations = $query->latest()->get();
+        $mutations = $query->latest()->get()->map(function ($mutation) {
+            $data = $mutation->toArray();
+            $data['transaction_date'] = $mutation->transaction_date?->format('Y-m-d');
+            $data['created_at'] = $mutation->created_at?->format('Y-m-d');
+            $data['updated_at'] = $mutation->updated_at?->format('Y-m-d');
+
+            return $data;
+        });
         // $mutations = $query->latest();
         
         // Paginate hasil query
@@ -119,10 +132,11 @@ class BankMutationController extends Controller
                         ? 'Data mutasi bank tidak ditemukan.' 
                         : 'Data mutasi bank berhasil diambil.',
                 'filters' => [
-                    'is_matched' => $isMatched ?? null,
-                    'bank_code'  => $request->bank_code ?? null,
-                    'start_date' => $request->start_date ?? null,
-                    'end_date'   => $request->end_date ?? null,
+                    'is_matched'     => $isMatched ?? null,
+                    'bank_code'      => $request->bank_code ?? null,
+                    'account_number' => $request->account_number ?? null,
+                    'start_date'     => $request->start_date ?? null,
+                    'end_date'       => $request->end_date ?? null,
                 ],
                 'total_records' => $mutations->count(),
                 'data' => $mutations
@@ -150,20 +164,20 @@ class BankMutationController extends Controller
      *      "bank_name": "a",
      *      "debit": "0.00",
      *      "credit": "100.00",
-     *      "transaction_date": "2026-08-01T00:00:00.000000Z",
+     *      "transaction_date": "2026-08-01",
      *      "transaction_time": null,
      *      "description": "test",
      *      "reference": "trx-12345",
      *      "is_matched": false,
-     *      "created_at": "2026-08-31T07:41:33.000000Z",
-     *      "updated_at": "2026-08-31T07:41:33.000000Z",
+     *      "created_at": "2026-08-31",
+     *      "updated_at": "2026-08-31",
      *      "deleted_at": null
      *  }
      * }
      */
     public function show(int $id)
     {
-        $mutation = BankMutation::find($id);
+        $mutation = AccountTransaction::find($id);
 
         if (!$mutation) {
             return response()->json([
@@ -172,9 +186,124 @@ class BankMutationController extends Controller
             ], 404);
         }
 
+        $data = $mutation->toArray();
+        $data['transaction_date'] = $mutation->transaction_date?->format('Y-m-d');
+        $data['created_at'] = $mutation->created_at?->format('Y-m-d');
+        $data['updated_at'] = $mutation->updated_at?->format('Y-m-d');
+
         return response()->json([
             'success' => true,
             'message' => 'Data mutasi bank berhasil diambil.',
+            'data'    => $data
+        ]);
+    }
+
+    /**
+     * Batch Update Mutasi Bank (is_matched = true)
+     * 
+     * Mengupdate status is_matched menjadi true untuk beberapa ID sekaligus.
+     * 
+     * @bodyParam ids array required Daftar ID yang akan diupdate. Example: [1, 2, 3, 4, 5]
+     * 
+     * @response 200 {
+     *  "success": true,
+     *  "message": "Proses batch update selesai.",
+     *  "data": {
+     *      "success_count": 3,
+     *      "failed_count": 2,
+     *      "failed_ids": [4, 5]
+     *  }
+     * }
+     */
+    public function batchUpdateStatus(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer|exists:account_transactions,id',
+        ]);
+
+        $ids = $request->ids;
+        $successIds = [];
+        $failedIds = [];
+
+        foreach ($ids as $id) {
+            try {
+                $mutation = AccountTransaction::find($id);
+                if ($mutation) {
+                    $mutation->update(['is_matched' => true]);
+                    $successIds[] = $id;
+                } else {
+                    $failedIds[] = $id;
+                }
+            } catch (\Exception $e) {
+                $failedIds[] = $id;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proses batch update selesai.',
+            'data' => [
+                'success_count' => count($successIds),
+                'failed_count' => count($failedIds),
+                'failed_ids' => $failedIds
+            ]
+        ]);
+    }
+
+    /**
+     * Update Mutasi Bank
+     * 
+     * Mengupdate data mutasi bank berdasarkan ID.
+     * 
+     * @urlParam id integer required ID dari mutasi bank. Example: 1
+     * @bodyParam debit decimal Jumlah debit. Example: 0.00
+     * @bodyParam credit decimal Jumlah kredit. Example: 100.00
+     * @bodyParam transaction_date date Tanggal transaksi. Example: 2026-08-01
+     * @bodyParam transaction_time string Waktu transaksi. Example: 10:00:00
+     * @bodyParam description string Deskripsi transaksi. Example: Pembayaran layanan
+     * @bodyParam reference string Referensi transaksi. Example: trx-12345
+     * @bodyParam fee_amount decimal Biaya transaksi. Example: 0.00
+     * @bodyParam is_matched boolean Status penyesuaian. Example: true
+     * 
+     * @response 200 {
+     *  "success": true,
+     *  "message": "Data mutasi bank berhasil diperbarui.",
+     *  "data": {
+     *      "id": 1,
+     *      "description": "Pembayaran layanan",
+     *      "is_matched": true,
+     *      "updated_at": "2026-10-28"
+     *  }
+     * }
+     */
+    public function update(Request $request, int $id)
+    {
+        $mutation = AccountTransaction::find($id);
+
+        if (!$mutation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data mutasi bank tidak ditemukan.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'debit'            => 'nullable|numeric|required_without:credit',
+            'credit'           => 'nullable|numeric|required_without:debit',
+            'transaction_date' => 'nullable|date_format:Y-m-d',
+            'transaction_time' => 'nullable|date_format:H:i:s',
+            'description'      => 'nullable|string|max:255',
+            'reference'        => 'nullable|string|max:255',
+            'fee_amount'       => 'nullable|numeric',
+            'is_matched'       => 'nullable|boolean',
+        ]);
+
+        $mutation->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data mutasi bank berhasil diperbarui.',
             'data'    => $mutation
         ]);
     }
@@ -194,7 +323,7 @@ class BankMutationController extends Controller
      */
     public function getCountUnmatchedRecords()
     {
-        $count = BankMutation::where('is_matched', false)->count();
+        $count = AccountTransaction::where('is_matched', false)->count();
 
         return response()->json([
             'success' => true,

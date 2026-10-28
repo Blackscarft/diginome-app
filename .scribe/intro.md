@@ -1,14 +1,13 @@
 # Introduction
 
-Ini adalah dokumentasi API untuk aplikasi Digimone.
+
 
 <aside>
     <strong>Base URL</strong>: <code>http://localhost:8000</code>
 </aside>
 
-    Dokumentasi ini dibuat menggunakan [Scribe](https://scribe.knuckles.wtf/laravel) untuk memudahkan pengembang dalam memahami dan mengintegrasikan API yang tersedia.
+    This documentation aims to provide all the information you need to work with our API.
 
-    Untuk mengakses endpoint API ini, Anda memerlukan kunci API. Silakan hubungi tim pengembang untuk mendapatkan kunci akses tersebut, lalu sertakan pada setiap permintaan ke endpoint yang memerlukan autentikasi.
-
-    Jika Anda memiliki pertanyaan atau memerlukan bantuan lebih lanjut, silakan hubungi tim pengembang kami melalui saluran dukungan resmi. Terima kasih telah menggunakan API kami!
+    <aside>As you scroll, you'll see code examples for working with the API in different programming languages in the dark area to the right (or as part of the content on mobile).
+    You can switch the language used with the tabs at the top right (or from the nav menu at the top left on mobile).</aside>
 

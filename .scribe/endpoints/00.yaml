@@ -20,10 +20,9 @@ endpoints:
       description: |-
         Menampilkan data mutasi bank yang belum dicocokkan (is_matched = false)
         dengan opsi filter berdasarkan kode bank dan rentang tanggal transaksi.
-      authenticated: true
+      authenticated: false
       deprecated: false
     headers:
-      X-API-KEY: 'cth: secret_key_123'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -46,6 +45,17 @@ endpoints:
         description: 'Kode bank (contoh: 0001, 0002).'
         required: false
         example: '0002'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      account_number:
+        custom: []
+        name: account_number
+        description: 'Nomor rekening bank.'
+        required: false
+        example: '1234567890'
         type: string
         enumValues: []
         exampleWasSpecified: true
@@ -76,6 +86,7 @@ endpoints:
     cleanQueryParameters:
       is_matched: 'false'
       bank_code: '0002'
+      account_number: '1234567890'
       start_date: '2026-01-01'
       end_date: '2026-01-02'
     bodyParameters: []
@@ -106,13 +117,13 @@ endpoints:
                 "bank_name": "a",
                 "debit": "0.00",
                 "credit": "100.00",
-                "transaction_date": "2026-08-01T00:00:00.000000Z",
+                "transaction_date": "2026-08-01",
                 "transaction_time": null,
                 "description": "test",
                 "reference": "trx-12345",
                 "is_matched": false,
-                "created_at": "2026-08-31T07:41:33.000000Z",
-                "updated_at": "2026-08-31T07:41:33.000000Z",
+                "created_at": "2026-08-31",
+                "updated_at": "2026-08-31",
                 "deleted_at": null
                 },
                 {
@@ -124,13 +135,13 @@ endpoints:
                 "bank_name": "b",
                 "debit": "100.00",
                 "credit": "0.00",
-                "transaction_date": "2026-08-02T00:00:00.000000Z",
+                "transaction_date": "2026-08-02",
                 "transaction_time": null,
                 "description": "test1",
                 "reference": "trx-12346",
                 "is_matched": false,
-                "created_at": "2026-08-31T07:41:33.000000Z",
-                "updated_at": "2026-08-31T07:41:33.000000Z",
+                "created_at": "2026-08-31",
+                "updated_at": "2026-08-31",
                 "deleted_at": null
                 }
             ]
@@ -138,10 +149,7 @@ endpoints:
         headers: []
         description: ''
     responseFields: []
-    auth:
-      - headers
-      - X-API-KEY
-      - 6g43cv8PD1aE5beadkZfhV6
+    auth: []
     controller: null
     method: null
     route: null
@@ -160,10 +168,9 @@ endpoints:
       subgroupDescription: ''
       title: 'Hitung Mutasi Belum Dicocokkan'
       description: 'Mengembalikan jumlah total data mutasi bank yang belum dicocokkan (is_matched = false).'
-      authenticated: true
+      authenticated: false
       deprecated: false
     headers:
-      X-API-KEY: 'cth: secret_key_123'
       Content-Type: application/json
       Accept: application/json
     urlParameters: []
@@ -188,10 +195,7 @@ endpoints:
         headers: []
         description: ''
     responseFields: []
-    auth:
-      - headers
-      - X-API-KEY
-      - 6g43cv8PD1aE5beadkZfhV6
+    auth: []
     controller: null
     method: null
     route: null
@@ -210,10 +214,9 @@ endpoints:
       subgroupDescription: ''
       title: 'Ambil Detail Mutasi Bank'
       description: 'Mengambil detail data mutasi bank berdasarkan ID.'
-      authenticated: true
+      authenticated: false
       deprecated: false
     headers:
-      X-API-KEY: 'cth: secret_key_123'
       Content-Type: application/json
       Accept: application/json
     urlParameters:
@@ -252,23 +255,247 @@ endpoints:
                "bank_name": "a",
                "debit": "0.00",
                "credit": "100.00",
-               "transaction_date": "2026-08-01T00:00:00.000000Z",
+               "transaction_date": "2026-08-01",
                "transaction_time": null,
                "description": "test",
                "reference": "trx-12345",
                "is_matched": false,
-               "created_at": "2026-08-31T07:41:33.000000Z",
-               "updated_at": "2026-08-31T07:41:33.000000Z",
+               "created_at": "2026-08-31",
+               "updated_at": "2026-08-31",
                "deleted_at": null
            }
           }
         headers: []
         description: ''
     responseFields: []
-    auth:
-      - headers
-      - X-API-KEY
-      - 6g43cv8PD1aE5beadkZfhV6
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/bank-mutations/{id}'
+    metadata:
+      custom: []
+      groupName: 'Manajemen Mutasi Bank'
+      groupDescription: |-
+
+        Endpoint untuk mengelola dan melihat data mutasi bank serta proses rekonsiliasi.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update Mutasi Bank'
+      description: 'Mengupdate data mutasi bank berdasarkan ID.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'ID dari mutasi bank.'
+        required: true
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: 1
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      debit:
+        custom: []
+        name: debit
+        description: 'Jumlah debit.'
+        required: false
+        example: '0.00'
+        type: decimal
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      credit:
+        custom: []
+        name: credit
+        description: 'Jumlah kredit.'
+        required: false
+        example: '100.00'
+        type: decimal
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      transaction_date:
+        custom: []
+        name: transaction_date
+        description: 'Tanggal transaksi.'
+        required: false
+        example: '2026-08-01'
+        type: date
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      transaction_time:
+        custom: []
+        name: transaction_time
+        description: 'Waktu transaksi.'
+        required: false
+        example: '10:00:00'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      description:
+        custom: []
+        name: description
+        description: 'Deskripsi transaksi.'
+        required: false
+        example: 'Pembayaran layanan'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      reference:
+        custom: []
+        name: reference
+        description: 'Referensi transaksi.'
+        required: false
+        example: trx-12345
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      fee_amount:
+        custom: []
+        name: fee_amount
+        description: 'Biaya transaksi.'
+        required: false
+        example: '0.00'
+        type: decimal
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      is_matched:
+        custom: []
+        name: is_matched
+        description: 'Status penyesuaian.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      debit: '0.00'
+      credit: '100.00'
+      transaction_date: '2026-08-01'
+      transaction_time: '10:00:00'
+      description: 'Pembayaran layanan'
+      reference: trx-12345
+      fee_amount: '0.00'
+      is_matched: true
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+           "success": true,
+           "message": "Data mutasi bank berhasil diperbarui.",
+           "data": {
+               "id": 1,
+               "description": "Pembayaran layanan",
+               "is_matched": true,
+               "updated_at": "2026-10-28"
+           }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: api/bank-mutations/batch-update
+    metadata:
+      custom: []
+      groupName: 'Manajemen Mutasi Bank'
+      groupDescription: |-
+
+        Endpoint untuk mengelola dan melihat data mutasi bank serta proses rekonsiliasi.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Batch Update Mutasi Bank (is_matched = true)'
+      description: 'Mengupdate status is_matched menjadi true untuk beberapa ID sekaligus.'
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      ids:
+        custom: []
+        name: ids
+        description: 'Daftar ID yang akan diupdate.'
+        required: true
+        example:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+        type: 'string[]'
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      ids:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+           "success": true,
+           "message": "Proses batch update selesai.",
+           "data": {
+               "success_count": 3,
+               "failed_count": 2,
+               "failed_ids": [4, 5]
+           }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
     controller: null
     method: null
     route: null
