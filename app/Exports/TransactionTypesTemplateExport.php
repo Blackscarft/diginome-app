@@ -99,8 +99,8 @@ class TransactionTypesTemplateExport implements FromArray, WithHeadings, WithSty
             $validation->setShowDropDown(true);
             $validation->setErrorTitle('Input tidak valid');
             $validation->setError('Harap pilih nilai dari dropdown.');
-            $validation->setPromptTitle('Pilih Kode Akun');
-            $validation->setPrompt('Silakan pilih kode akun.');
+            $validation->setPromptTitle('Pilih kategori');
+            $validation->setPrompt('Silakan pilih kategori.');
             $validation->setFormula1($kategoriList);
 
              //  5. Terapkan dropdown pada kolom status_aktif (Kolom E)
