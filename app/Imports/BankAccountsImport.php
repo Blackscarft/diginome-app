@@ -42,6 +42,22 @@ class BankAccountsImport implements
         public int $userId,
     ) {}
 
+    /**
+     * Simpan data gagal beserta pesan error.
+     */
+    private function saveFailedRow(array $row, string $message): void
+    {
+        FailedImportRow::create([
+            'import_id'        => $this->importRecordId,
+            'data'             => $row,
+            'validation_error' => $message,
+        ]);
+
+        DB::table('imports')
+            ->where('id', $this->importRecordId)
+            ->increment('processed_rows');
+    }
+
     public function onRow(Row $excelRow): void
     {
         $row = $excelRow->toArray();
@@ -58,17 +74,12 @@ class BankAccountsImport implements
         ]);
 
         if ($validator->fails()) {
-            FailedImportRow::create([
-                'import_id'        => $this->importRecordId,
-                'data'             => $row,
-                'validation_error' => implode(', ', $validator->errors()->all()),
-            ]);
+            $this->saveFailedRow(
+                $row,
+                implode('; ', $validator->errors()->all())
+            );
 
-            DB::table('imports')
-                ->where('id', $this->importRecordId)
-                ->increment('processed_rows');
-
-            return; // HENTIKAN proses untuk baris ini, lanjut ke baris berikutnya
+            return;
         }
 
         $accountId = Account::where('account_code', $row['kode_akun'])->value('id');
@@ -95,23 +106,23 @@ class BankAccountsImport implements
                     ->increment('processed_rows');
             });
         } catch (Throwable $e) {
-            // Tangkap jika terjadi database error tak terduga agar job queue tidak mati
-            FailedImportRow::create([
-                'import_id'        => $this->importRecordId,
-                'data'             => $row,
-                'validation_error' => 'Database Error: ' . $e->getMessage(),
-            ]);
-
-            DB::table('imports')
-                ->where('id', $this->importRecordId)
-                ->increment('processed_rows');
+            report($e);
+            
+            $this->saveFailedRow(
+                $row,
+                'Database Error: ' . $e->getMessage()
+            );
         }
-
     }
 
     public function onError(Throwable $e): void
     {
-        // Tetap dipertahankan untuk mengantisipasi error di luar onRow
+        report($e);
+        
+        $this->saveFailedRow(
+            [],
+            'Excel Error: ' . $e->getMessage()
+        );
     }
 
     public function beforeImport(BeforeImport $event): void
@@ -178,6 +189,8 @@ class BankAccountsImport implements
         $importRecord->update([
             'completed_at' => now(),
         ]);
+        
+        report($event->getException());
 
         if ($user = User::find($this->userId)) {
             Notification::make()
