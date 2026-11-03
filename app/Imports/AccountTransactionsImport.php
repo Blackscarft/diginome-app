@@ -11,7 +11,6 @@ use App\Models\User;
 use Filament\Actions\Imports\Models\FailedImportRow;
 use Filament\Actions\Imports\Models\Import;
 use Filament\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\OnEachRow;
@@ -22,9 +21,9 @@ use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Maatwebsite\Excel\Events\AfterImport;
 use Maatwebsite\Excel\Events\BeforeImport;
 use Maatwebsite\Excel\Events\ImportFailed;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Row;
 use Throwable;
 
@@ -37,7 +36,6 @@ class AccountTransactionsImport implements
     SkipsOnFailure,
     SkipsOnError,
     WithChunkReading,
-    ShouldQueue,
     WithEvents
 {
     use RegistersEventListeners;
@@ -68,6 +66,28 @@ class AccountTransactionsImport implements
     {
         $row = $excelRow->toArray();
 
+        // Pastikan heading tersedia
+        $requiredColumns = [
+            'account_type',
+            'account_name',
+            'transaction_type',
+            'debit',
+            'credit',
+            'transaction_date',
+        ];
+
+        foreach ($requiredColumns as $column) {
+            if (!array_key_exists($column, $row)) {
+                $this->saveFailedRow(
+                    $row,
+                    "Kolom {$column} tidak ditemukan. Kolom yang tersedia: "
+                    . implode(', ', array_keys($row))
+                );
+
+                return;
+            }
+        }
+
         $accountType = match ($row['account_type'] ?? null) {
             'Bank' => BankAccount::class,
             'Cash' => CashAccount::class,
@@ -93,7 +113,7 @@ class AccountTransactionsImport implements
             }
         }
 
-        $transaction_time = $row['transaction_time'];
+        $transaction_time = $row['transaction_time'] ?? null;
         if ($transaction_time !== null && $transaction_time !== '') {
             if (is_numeric($transaction_time)) {
                 $transaction_time = ExcelDate::excelToDateTimeObject((float) $transaction_time)
@@ -102,6 +122,13 @@ class AccountTransactionsImport implements
                 $transaction_time = Carbon::parse($transaction_time)->format('H:i:s');
             }
         }
+
+        $accountExistsRule = match ($row['account_type'] ?? null) {
+            'Bank' => Rule::exists('bank_accounts', 'account_number'),
+            'Cash' => Rule::exists('cash_accounts', 'account_number'),
+            'Fintech' => Rule::exists('fintech_accounts', 'merchant_id'),
+            default => 'prohibited',
+        };
 
         $validator = Validator::make([
             ...$row,
@@ -113,7 +140,7 @@ class AccountTransactionsImport implements
             'account_type' => ['required', 'string', 'in:Bank,Cash,Fintech'],
             'debit' => ['required', 'numeric', 'min:0'],
             'credit' => ['required', 'numeric', 'min:0'],
-            'account_number' => ['required', 'exists:bank_accounts,account_number'],
+            'account_number' => ['required', $accountExistsRule],
             'transaction_type_code' => ['required', 'exists:transaction_types,type_code'],
             'transaction_date' => ['required', 'date_format:Y-m-d'],
             'transaction_time' => ['nullable', 'date_format:H:i:s'],
@@ -209,43 +236,6 @@ class AccountTransactionsImport implements
         $import->update([
             'total_rows' => $totalRows,
         ]);
-    }
-
-    public function afterImport(AfterImport $event): void
-    {
-        $importRecord = Import::find($this->importRecordId);
-
-        if (! $importRecord) {
-            return;
-        }
-
-        $failedCount = FailedImportRow::where('import_id', $importRecord->id)->count();
-
-        $importRecord->refresh();
-
-        $importRecord->update([
-            'processed_rows' => $importRecord->successful_rows + $failedCount,
-            'completed_at'   => now(),
-        ]);
-
-        $user = User::find($this->userId);
-
-        if (! $user) {
-            return;
-        }
-
-        Notification::make()
-            ->title(
-                $failedCount > 0
-                    ? 'Import Selesai dengan Catatan'
-                    : 'Import Transaksi Berhasil'
-            )
-            ->body(
-                "File {$importRecord->file_name} telah selesai diproses ({$importRecord->successful_rows} berhasil, {$failedCount} gagal)."
-            )
-            ->color($failedCount > 0 ? 'warning' : 'success')
-            ->icon($failedCount > 0 ? 'heroicon-o-exclamation-triangle' : 'heroicon-o-check-circle')
-            ->sendToDatabase($user);
     }
 
     public function importFailed(ImportFailed $event): void

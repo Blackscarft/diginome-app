@@ -60,5 +60,5 @@ class AccountTransactionResource extends Resource
             'view' => ViewAccountTransaction::route('/{record}'),
             'edit' => EditAccountTransaction::route('/{record}/edit'),
             ];
-            }
+    }
 }

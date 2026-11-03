@@ -4,8 +4,9 @@ namespace App\Filament\Resources\AccountTransactions\Pages;
 
 use App\Exports\AccountTransactionTemplateExport;
 use App\Filament\Resources\AccountTransactions\AccountTransactionResource;
-use App\Imports\AccountTransactionsImport;
+use App\Imports\AccountTransactionsSheetImport;
 use App\Imports\PreviewAccountTransactionImport;
+use App\Jobs\ImportFinalizer;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
@@ -23,7 +24,6 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 
 use Filament\Forms\Components\DatePicker;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\Filter;
 
 use Illuminate\Support\Collection;
@@ -414,7 +414,7 @@ class ImportAccountTransactions extends Page Implements HasTable
             // Simpan data ke Tabel Imports untuk riwayat Import
             $importRecord = Import::create([
                 'user_id' => Auth::id(),
-                'importer' => AccountTransactionsImport::class,
+                'importer' => AccountTransactionsSheetImport::class,
                 'file_name' => $fileName,
                 'file_path' => $storedFilePath,
                 'total_rows' => 0,
@@ -423,10 +423,18 @@ class ImportAccountTransactions extends Page Implements HasTable
             ]);
             
             Excel::queueImport(
-                new AccountTransactionsImport($importRecord->id, Auth::id()), 
+                new AccountTransactionsSheetImport($importRecord->id, Auth::id()), 
                 $storedFilePath, 
                 'local' // Disk penyimpanan Laravel (default: storage/app)
-            );
+            )->chain([
+                new ImportFinalizer(
+                    importRecordId: $importRecord->id,
+                    userId: Auth::id(),
+                    successTitle: 'Import Transaksi Berhasil',
+                    failedTitle: 'Import Transaksi Selesai dengan Catatan',
+                    description: "File {$importRecord->file_name} telah selesai diproses"
+                ),
+            ]);
 
             Notification::make()
                 ->title('Import Dimulai di Background')
@@ -442,7 +450,8 @@ class ImportAccountTransactions extends Page Implements HasTable
 
             Notification::make()
                 ->title('Import gagal')
-                ->body('Terjadi kesalahan saat import data.')
+                // ->body('Terjadi kesalahan saat import data.')
+                ->body($e->getMessage())
                 ->danger()
                 ->persistent()
                 ->send();
